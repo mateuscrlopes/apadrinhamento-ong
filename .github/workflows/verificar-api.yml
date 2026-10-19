@@ -1,0 +1,31 @@
+name: Verificar API da campanha
+
+on:
+  push:
+    paths:
+      - ".github/workflows/verificar-api.yml"
+      - "supabase/functions/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Consultar vitrine pública
+        shell: bash
+        run: |
+          curl -fsS --retry 2 --max-time 20 \
+            "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica" \
+            -o resposta.json
+          jq -e '.perfis | type == "array"' resposta.json
+      - name: Garantir bloqueio da gestão sem login
+        shell: bash
+        run: |
+          status=$(curl -sS -o resposta-admin.json -w "%{http_code}" --max-time 20 \
+            "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-admin")
+          echo "Status não autenticado: $status"
+          test "$status" = "401"
