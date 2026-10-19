@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#7149a5">
-  <meta name="description" content="Campanha de apadrinhamento da ONG — protótipo de interface.">
-  <title>Campanha de Apadrinhamento | Prévia</title>
+  <meta name="description" content="Conheça a campanha de apadrinhamento da ONG e acompanhe os perfis disponíveis.">
+  <title>Campanha de Apadrinhamento</title>
   <style>
     :root{--purple:#7149a5;--purple-dark:#452577;--rose:#e2a7c4;--ink:#2c2336;--muted:#655e6d;--border:#e9e1ee;--surface:#fff;--bg:#faf7fc;--radius:20px}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
     button,input{font:inherit} button{cursor:pointer} :focus-visible{outline:3px solid #f0a5cf;outline-offset:3px} .wrap{max-width:1110px;padding:0 22px;margin:auto}
-    .demo{background:#fff1cf;color:#654808;text-align:center;padding:9px 18px;font-size:.86rem;font-weight:650;border-bottom:1px solid #efdca2}
+    [hidden]{display:none!important}.profile-photo{width:100%;height:100%;object-fit:cover}.consent{display:flex;gap:10px;align-items:flex-start;font-size:.83rem;line-height:1.4;color:var(--muted);margin:10px 0 16px}.consent input{margin-top:3px;accent-color:var(--purple)}.form-message{color:#92382f!important;font-weight:650}.success-message{color:#24613d!important;padding:18px;background:#e9f7ef;border-radius:12px}
     .hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,#503083 0%,#744cac 70%,#955fba 100%);padding:54px 0 58px}
     .hero:after{content:"";position:absolute;width:360px;height:360px;right:-110px;top:-130px;border:75px solid #ffffff14;border-radius:50%;pointer-events:none}
     .hero-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -56,13 +56,12 @@
   </style>
 </head>
 <body>
-  <div class="demo" role="status">AMBIENTE DE DEMONSTRAÇÃO — perfis fictícios e solicitações desativadas</div>
   <header class="hero">
     <div class="wrap hero-inner">
       <div class="hero-copy">
         <span class="eyebrow">♡ Campanha solidária</span>
         <h1>Pequenos gestos.<br>Grandes histórias.</h1>
-        <p>Conheça os perfis disponíveis para apadrinhamento. Cada gesto de carinho pode fazer a diferença. Este é um protótipo visual para aprovação da ONG.</p>
+        <p>Conheça a campanha de apadrinhamento. Com cuidado e solidariedade, cada gesto pode fazer a diferença na vida de uma criança.</p>
         <a href="#perfis">Conhecer os perfis ↓</a>
       </div>
       <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 82 15 49C-8 23 28-5 50 29 72-5 108 23 85 49L50 82Z"/><path d="M50 63 30 45M50 63 71 43"/></svg></div>
@@ -73,94 +72,198 @@
     <div class="heading">
       <div>
         <h2>Encontre um perfil para apadrinhar</h2>
-        <p class="subtitle">Consulte os perfis e acompanhe a disponibilidade. As informações nesta prévia são inteiramente fictícias.</p>
+        <p class="subtitle">Escolha um perfil disponível e manifeste seu interesse. Nossa equipe entrará em contato para orientar os próximos passos.</p>
       </div>
-      <div class="stats" aria-label="Resumo dos perfis fictícios">
+      <div class="stats" id="stats" aria-label="Resumo dos perfis" hidden>
         <div class="stat"><strong id="total">0</strong><span>Perfis</span></div>
         <div class="stat"><strong id="available">0</strong><span>Disponíveis</span></div>
         <div class="stat"><strong id="sponsored">0</strong><span>Apadrinhados</span></div>
       </div>
     </div>
-    <nav class="filters" aria-label="Filtrar perfis">
+    <nav class="filters" id="filters" aria-label="Filtrar perfis" hidden>
       <button class="filter" type="button" data-filter="todos" aria-pressed="true">Todos</button>
       <button class="filter" type="button" data-filter="disponivel" aria-pressed="false">Disponíveis</button>
       <button class="filter" type="button" data-filter="em_contato" aria-pressed="false">Em contato</button>
       <button class="filter" type="button" data-filter="confirmado" aria-pressed="false">Apadrinhados</button>
       <span class="count" id="result-count" aria-live="polite"></span>
     </nav>
+    <div id="status-area" class="empty" role="status" aria-live="polite">Estamos organizando os perfis para a campanha de apadrinhamento.</div>
     <div class="grid" id="cards" aria-live="polite"></div>
-    <div class="note"><strong>Importante:</strong> a página ainda não está conectada ao banco de dados. O formulário está desativado para impedir o envio de informações pessoais durante os testes. As fotos definitivas só serão publicadas mediante autorização adequada.</div>
+    <div class="note"><strong>Um compromisso com o cuidado:</strong> as informações e fotografias são apresentadas apenas quando autorizadas pela ONG, respeitando a privacidade das crianças.</div>
   </main>
-  <footer class="wrap">Campanha de Apadrinhamento · Prévia para validação interna</footer>
+  <footer class="wrap">Campanha de Apadrinhamento · Solidariedade que transforma</footer>
 
   <dialog id="interest" aria-labelledby="dialog-title">
-    <div class="modal-body">
-      <div class="modal-head"><h2 id="dialog-title">Quero apadrinhar</h2><button type="button" class="close" id="close-dialog" aria-label="Fechar">×</button></div>
+    <form class="modal-body" id="form-interest">
+      <div class="modal-head">
+        <h2 id="dialog-title">Quero apadrinhar</h2>
+        <button type="button" class="close" id="close-dialog" aria-label="Fechar">×</button>
+      </div>
       <p id="chosen-profile"></p>
-      <label class="field">Nome completo<input autocomplete="off" type="text" placeholder="Seu nome" disabled></label>
-      <label class="field">WhatsApp<input autocomplete="off" type="tel" placeholder="(00) 00000-0000" disabled></label>
-      <label class="field">E-mail (opcional)<input autocomplete="off" type="email" placeholder="seuemail@exemplo.com" disabled></label>
-      <p class="disclaimer">Esta é apenas uma prévia. Nenhum dado é coletado ou enviado. O formulário será ativado após a configuração e os testes de segurança do Supabase.</p>
-      <button class="cta" type="button" disabled>Solicitações ainda não disponíveis</button>
-    </div>
+      <label class="field">Nome completo
+        <input id="field-name" name="nome" type="text" maxlength="120" autocomplete="name" required>
+      </label>
+      <label class="field">WhatsApp com DDD
+        <input id="field-phone" name="telefone" type="tel" maxlength="22" autocomplete="tel" placeholder="(00) 00000-0000" required>
+      </label>
+      <label class="field">E-mail (opcional)
+        <input id="field-email" name="email" type="email" maxlength="180" autocomplete="email">
+      </label>
+      <label class="consent">
+        <input id="field-consent" type="checkbox" required>
+        <span>Autorizo a ONG a utilizar meus dados de contato exclusivamente para dar continuidade ao meu interesse no apadrinhamento, conforme o aviso de privacidade da campanha.</span>
+      </label>
+      <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+      <button class="cta" type="submit" id="submit-interest">Enviar interesse</button>
+    </form>
   </dialog>
-
+  <script src="./js/config.js"></script>
   <script>
     'use strict';
-    // Somente registros fictícios. Não substituir por dados reais neste arquivo.
-    const perfis = [
-      {codigo:'P001',idade:5,roupa:'6',calcado:'27',status:'disponivel'},
-      {codigo:'P002',idade:8,roupa:'10',calcado:'31',status:'disponivel'},
-      {codigo:'P003',idade:4,roupa:'4',calcado:'25',status:'em_contato'},
-      {codigo:'P004',idade:11,roupa:'12',calcado:'34',status:'disponivel'},
-      {codigo:'P005',idade:7,roupa:'8',calcado:'29',status:'confirmado'},
-      {codigo:'P006',idade:9,roupa:'10',calcado:'32',status:'disponivel'}
-    ];
-    const labels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
-    const cardContainer=document.getElementById('cards');
+    const config=window.CAMPANHA_CONFIG || {};
+    const endpoint=config.publicEndpointEnabled===true && typeof config.publicEndpoint==='string' ?
+      config.publicEndpoint : null;
+    const categories={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
+    const cards=document.getElementById('cards');
+    const statusArea=document.getElementById('status-area');
     const dialog=document.getElementById('interest');
+    const form=document.getElementById('form-interest');
+    const formMessage=document.getElementById('form-message');
+    let perfis=[];
+    let selectedProfile=null;
+    let activeFilter='todos';
     const silhouette='<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="33" r="17"></circle><path d="M18 88c1-20 13-33 32-33s31 13 32 33"></path></svg>';
-    function makeCard(p){
-      const card=document.createElement('article');
-      card.className='card';
-      const statusClass=p.status==='em_contato'?'contact':p.status==='confirmado'?'sponsored':'';
-      const disabled=p.status!=='disponivel'?'disabled':'';
-      card.innerHTML='<div class="photo">'+silhouette+
-        '<span class="placeholder">Imagem ilustrativa</span>'+
-        '<span class="tag '+statusClass+'">'+labels[p.status]+'</span></div>'+
-        '<div class="info"><h3>Perfil '+p.codigo.slice(1)+'</h3>'+
-        '<p class="age">'+p.idade+' anos · Código '+p.codigo+'</p>'+
-        '<div class="details"><div>Roupa<strong>Tamanho '+p.roupa+'</strong></div>'+
-        '<div>Calçado<strong>Nº '+p.calcado+'</strong></div></div>'+
-        '<button class="cta" type="button" '+disabled+'>'+
-        (p.status==='disponivel'?'Quero apadrinhar':'Indisponível no momento')+
-        '</button></div>';
-      const btn=card.querySelector('button');
-      if(p.status==='disponivel')btn.addEventListener('click',function(){
-        document.getElementById('chosen-profile').textContent='Você selecionou o perfil '+p.codigo+'.';
+
+    function showStatus(message){
+      statusArea.textContent=message;
+      statusArea.hidden=false;
+    }
+    function makeElement(tag, className, text){
+      const el=document.createElement(tag);
+      if(className)el.className=className;
+      if(text!==undefined)el.textContent=String(text);
+      return el;
+    }
+    function makeCard(profile){
+      const card=makeElement('article','card');
+      const image=makeElement('div','photo');
+      if(profile.foto_url && /^https:\/\//.test(profile.foto_url)){
+        const img=document.createElement('img');
+        img.src=profile.foto_url;
+        img.alt='Imagem autorizada do '+(profile.nome_exibicao||'perfil');
+        img.loading='lazy';
+        img.referrerPolicy='no-referrer';
+        img.className='profile-photo';
+        img.addEventListener('error',function(){img.remove(); image.insertAdjacentHTML('afterbegin',silhouette);});
+        image.appendChild(img);
+      }else{
+        image.innerHTML=silhouette;
+      }
+      const status=makeElement('span','tag '+(profile.situacao==='em_contato'?'contact':profile.situacao==='confirmado'?'sponsored':''),categories[profile.situacao]);
+      image.appendChild(status);
+      const content=makeElement('div','info');
+      content.appendChild(makeElement('h3','',profile.nome_exibicao || 'Perfil '+profile.codigo));
+      content.appendChild(makeElement('p','age',profile.idade+' anos'));
+      const details=makeElement('div','details');
+      const roupa=makeElement('div','','Roupa');
+      roupa.appendChild(makeElement('strong','','Tamanho '+profile.tamanho_roupa));
+      const calcado=makeElement('div','','Calçado');
+      calcado.appendChild(makeElement('strong','','Nº '+profile.tamanho_calcado));
+      details.append(roupa,calcado);
+      content.appendChild(details);
+      const button=makeElement('button','cta',profile.situacao==='disponivel'?'Quero apadrinhar':'Indisponível no momento');
+      button.type='button';
+      button.disabled=profile.situacao!=='disponivel';
+      button.addEventListener('click',function(){
+        selectedProfile=profile;
+        document.getElementById('chosen-profile').textContent='Você selecionou '+(profile.nome_exibicao || 'o perfil '+profile.codigo)+'.';
+        form.reset();
+        formMessage.textContent='';
         dialog.showModal();
       });
+      content.appendChild(button);
+      card.append(image,content);
       return card;
     }
-    function render(filter){
-      cardContainer.replaceChildren();
-      const visible=filter==='todos'?perfis:perfis.filter(function(p){return p.status===filter;});
-      visible.forEach(function(p){cardContainer.appendChild(makeCard(p));});
-      if(!visible.length){const el=document.createElement('p');el.className='empty';el.textContent='Nenhum perfil encontrado nesta categoria.';cardContainer.appendChild(el);}
+    function render(){
+      cards.replaceChildren();
+      const visible=activeFilter==='todos'?perfis:perfis.filter(function(profile){return profile.situacao===activeFilter;});
+      visible.forEach(function(profile){cards.appendChild(makeCard(profile));});
+      if(!visible.length)cards.appendChild(makeElement('p','empty','Nenhum perfil encontrado nesta categoria.'));
       document.getElementById('result-count').textContent=visible.length+' perfil(is) exibido(s)';
     }
-    document.getElementById('total').textContent=perfis.length;
-    document.getElementById('available').textContent=perfis.filter(function(p){return p.status==='disponivel';}).length;
-    document.getElementById('sponsored').textContent=perfis.filter(function(p){return p.status==='confirmado';}).length;
+    async function loadProfiles(){
+      if(!endpoint){
+        showStatus('Estamos organizando os perfis para a campanha de apadrinhamento.');
+        return;
+      }
+      showStatus('Carregando perfis disponíveis...');
+      try{
+        const response=await fetch(endpoint,{method:'GET',cache:'no-store',credentials:'omit'});
+        if(!response.ok)throw Error('Servidor indisponível');
+        const payload=await response.json();
+        if(!payload || !Array.isArray(payload.perfis))throw Error('Resposta inválida');
+        perfis=payload.perfis.filter(function(profile){
+          return profile && typeof profile.id==='string' && categories[profile.situacao] &&
+            Number.isInteger(profile.idade) && profile.idade>=0 && profile.idade<19;
+        });
+        document.getElementById('total').textContent=perfis.length;
+        document.getElementById('available').textContent=perfis.filter(p=>p.situacao==='disponivel').length;
+        document.getElementById('sponsored').textContent=perfis.filter(p=>p.situacao==='confirmado').length;
+        document.getElementById('stats').hidden=false;
+        document.getElementById('filters').hidden=false;
+        statusArea.hidden=true;
+        render();
+      }catch(err){
+        console.error('Falha ao carregar a campanha',err);
+        showStatus('Não foi possível carregar os perfis agora. Tente novamente mais tarde.');
+      }
+    }
     document.querySelectorAll('[data-filter]').forEach(function(button){
       button.addEventListener('click',function(){
-        document.querySelectorAll('[data-filter]').forEach(function(b){b.setAttribute('aria-pressed',String(b===button));});
-        render(button.dataset.filter);
+        activeFilter=button.dataset.filter;
+        document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+        render();
       });
     });
     document.getElementById('close-dialog').addEventListener('click',function(){dialog.close();});
-    dialog.addEventListener('click',function(e){if(e.target===dialog)dialog.close();});
-    render('todos');
+    dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close();});
+    form.addEventListener('submit',async function(event){
+      event.preventDefault();
+      if(!selectedProfile || !endpoint || !form.reportValidity())return;
+      const nome=document.getElementById('field-name').value.trim();
+      const telefone=document.getElementById('field-phone').value.trim();
+      const email=document.getElementById('field-email').value.trim();
+      if(nome.length<3 || telefone.replace(/\D/g,'').length<10 || !document.getElementById('field-consent').checked){
+        formMessage.textContent='Confira seu nome, telefone e a autorização de contato.';
+        return;
+      }
+      const submit=document.getElementById('submit-interest');
+      submit.disabled=true;
+      submit.textContent='Enviando...';
+      formMessage.textContent='';
+      try{
+        const response=await fetch(endpoint,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          credentials:'omit',
+          body:JSON.stringify({acao:'solicitar',crianca_id:selectedProfile.id,nome,telefone,email,autorizou_contato:true})
+        });
+        const result=await response.json();
+        if(!response.ok || result.sucesso!==true){
+          throw Error(result.mensagem || 'Não foi possível enviar a solicitação.');
+        }
+        form.replaceChildren(makeElement('p','success-message',
+          'Recebemos seu interesse! A equipe da ONG entrará em contato pelo telefone informado.'));
+        selectedProfile=null;
+        await loadProfiles();
+      }catch(error){
+        formMessage.textContent=error.message || 'Não foi possível enviar sua solicitação. Tente novamente.';
+      }finally{
+        submit.disabled=false;
+        submit.textContent='Enviar interesse';
+      }
+    });
+    loadProfiles();
   </script>
 </body>
 </html>
