@@ -4,5 +4,6 @@
 window.CAMPANHA_CONFIG = Object.freeze({
   projectId: 'wsixoeonopxejapfxjms',
   publicEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica',
-  publicEndpointEnabled: false,
+  publicEndpointEnabled: false, // só habilitar após instalar e homologar a API
+  turnstileSiteKey: null, // site key pública da Cloudflare; segredo fica no Supabase
 });
