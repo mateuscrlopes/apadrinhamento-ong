@@ -1,34 +1,55 @@
 # Campanha de Apadrinhamento — ONG
 
-Sistema de apadrinhamento desenvolvido para uso real pela ONG. A vitrine ficará hospedada no GitHub Pages e incorporada à página institucional no Wix. Os registros e operações de apadrinhamento serão gerenciados pelo Supabase da ONG.
+Sistema real de apadrinhamento que será incorporado ao site Wix da ONG, com vitrine independente no GitHub Pages e banco Supabase institucional.
 
-## Situação atual
+**Situação: EM IMPLANTAÇÃO — não receber dados reais até a homologação.**
+A página pública não apresenta perfis fictícios; os cadastros de menores precisam de autorização para publicação.
 
-- Página pública definitiva implementada em `index.html`, com visual responsivo, filtros e formulário de interesse.
-- A interface **não exibe perfis fictícios**. Os cartões serão alimentados exclusivamente por dados reais publicados de forma autorizada.
-- Integração com o Supabase da ONG **pendente de habilitação e teste do servidor**; a página apresenta um estado de preparação e não aceita pedidos até a integração estar segura.
-- Projeto Supabase informado: `wsixoeonopxejapfxjms`, pertencente à conta institucional da ONG; a conexão atual do ChatGPT ainda não tem permissão.
-- A configuração da função pública fica em `js/config.js`; `publicEndpointEnabled` só deve passar para `true` **depois** de implantar e testar o servidor.
-- Endereço do GitHub Pages: https://mateuscrlopes.github.io/apadrinhamento-ong/
+## Endereços
 
-## Contrato de integração esperado
+- Código: https://github.com/mateuscrlopes/apadrinhamento-ong
+- Vitrine (GitHub Pages): https://mateuscrlopes.github.io/apadrinhamento-ong/
+- Projeto Supabase da ONG: \`wsixoeonopxejapfxjms\` (usar o projeto corporativo, nunca LifeOS/Nordestrip).
 
-`GET /functions/v1/campanha-publica` retorna `{ "perfis": [...] }`, com campos públicos estritamente necessários: `id`, `codigo`, `nome_exibicao`, `idade`, `tamanho_roupa`, `tamanho_calcado`, `foto_url` e `situacao` (`disponivel`, `em_contato`, `confirmado`). Dados pessoais privados nunca devem integrar essa resposta.
+## Arquivos
 
-`POST /functions/v1/campanha-publica` recebe `{ "acao": "solicitar", "crianca_id": "...", "nome": "...", "telefone": "...", "email": "...", "autorizou_contato": true }` e responde `{ "sucesso": true }` **somente após** persistência segura e reserva atômica. Implementar validação, política de retenção, proteção antirrobô e limitação de tentativas antes de ativar.
+- \`index.html\`: interface pública responsiva, filtros, estatísticas e formulário protegido com Turnstile.
+- \`js/config.js\`: endereço da API, controle da ativação e chave pública Turnstile.
+- \`database/instalacao.sql\`: tabelas, RLS, revogação de acesso público e rotinas atômicas de reserva/confirmação/cancelamento.
+- \`supabase/functions/campanha-publica/index.ts\`: consulta apenas perfis publicados e recebe solicitações verificadas.
+- \`supabase/config.toml\`: configura que a função pública não exige JWT de visitante (proteção é realizada por validação + Turnstile no servidor).
 
-## Próximas etapas
+## Plano de implantação (não executado ainda)
 
-1. Autorizar a conexão do projeto corporativo do Supabase para implantação.
-2. Definir o banco de perfis e solicitações, RLS, papéis administrativos e fotos autorizadas.
-3. Criar função de reserva atômica e proteção antiabuso; testar concorrência entre duas solicitações.
-4. Criar painel administrativo protegido, confirmação/liberação de reservas e histórico.
-5. Validar privacidade (inclusive consentimentos), acessibilidade, notificações e uso em celular.
-6. Ativar a API e homologar no endereço GitHub Pages, depois incorporar no Wix.
+1. Obter permissão para gerenciar o projeto Supabase corporativo neste ChatGPT.
+2. **Revisar e executar** \`database/instalacao.sql\` no SQL Editor do projeto correto.
+3. Criar widget gratuito Cloudflare Turnstile com hostname \`mateuscrlopes.github.io\`.
+4. Em Supabase > Edge Functions > Secrets, configurar \`CLOUDFLARE_TURNSTILE_SECRET_KEY\` com a **chave secreta** Turnstile, exclusivamente no servidor. Nunca gravá-la no GitHub.
+5. Publicar \`campanha-publica\` no Supabase com \`verify_jwt = false\`. Essa função atende visitantes sem autenticação, mas exige a validação Turnstile no POST.
+6. Em \`js/config.js\`, preencher \`turnstileSiteKey\` com **chave pública** do Turnstile; somente após homologar o backend alterar \`publicEndpointEnabled: true\`.
+7. Confirmar que GET retorna somente perfis ativos com publicação autorizada e não revela nome/telefone/e-mail dos padrinhos.
+8. Testar reservas simultâneas, formulários inválidos, bloqueio de envios automatizados, consentimento e tratamento de erros.
+9. Implementar e homologar o **painel administrativo privado** e acesso da equipe; não inserir dados reais antes dele estar pronto.
+10. Obter as autorizações e revisar aviso de privacidade, fotos, retenção de contatos e responsividade antes de incorporar no Wix.
 
-## Segurança
+## Contrato da função
 
-- Repositório público: **nunca** incluir senhas, tokens privilegiados, chaves secretas ou dados pessoais de padrinhos.
-- Chaves publicáveis, caso usadas no navegador, exigem permissões adequadas no banco. Chaves secretas permanecem no servidor.
-- A ONG deve validar expressamente autorização para publicação de imagens e informações de menores, além do aviso de privacidade.
-- Não ativar solicitações sem proteção contra acesso indevido, fraude e duplo apadrinhamento.
+GET \`/functions/v1/campanha-publica\` → \`{"perfis":[{"id":"UUID","codigo":"P001","nome_exibicao":"...","idade":7,"tamanho_roupa":"8","tamanho_calcado":"29","foto_url":null,"situacao":"disponivel"}]}\`.
+Exibe somente perfis autorizados pela ONG.
+
+POST \`/functions/v1/campanha-publica\` →
+\`{"acao":"solicitar","crianca_id":"UUID","nome":"...","telefone":"...","email":"...","autorizou_contato":true,"turnstile_token":"...","website":""}\`
+→ \`{"sucesso":true}\` apenas quando o interesse for registrado de maneira atômica.
+
+## Regras de segurança
+
+- Código público: nenhuma chave secreta, senha, token de administração ou dado pessoal neste repositório.
+- O banco não concede acesso direto a tabelas a visitantes; RLS habilitado.
+- Funções SQL privilegiadas possuem \`search_path = ''\` e execução permitida apenas ao \`service_role\`.
+- As rotinas de gravação dependem de validação de dados + Turnstile no servidor; a API ainda está desligada no cliente.
+- Adicionar proteção contra abuso/limites de requisições se o volume de campanha exigir.
+- A ONG deve aprovar divulgação de imagens e informações dos menores e definir um aviso de privacidade válido.
+
+## Monitoramento futuro
+
+Configurar monitoramento depois dos testes. Não prometer que consultas agendadas impeçam qualquer pausa do plano gratuito.
