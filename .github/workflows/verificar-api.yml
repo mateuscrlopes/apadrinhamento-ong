@@ -29,3 +29,10 @@ jobs:
             "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-admin")
           echo "Status não autenticado: $status"
           test "$status" = "401"
+      - name: Verificar biblioteca de login da gestão
+        shell: bash
+        run: |
+          curl -fsSL --max-time 20 \
+            "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js" \
+            -o supabase.min.js
+          test -s supabase.min.js
