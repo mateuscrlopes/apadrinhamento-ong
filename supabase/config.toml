@@ -1,0 +1,2 @@
+[functions.campanha-publica]
+verify_jwt = false
