@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#624393">
+<title>Gestão de Apadrinhamentos | ONG</title>
+<style>
+:root{--primary:#69449b;--dark:#39254f;--ink:#31283b;--muted:#706979;--bg:#faf8fc;--line:#e7dfec;--green:#267449;--red:#a43c42}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
+[hidden]{display:none!important}:focus-visible{outline:3px solid #e6a7c7;outline-offset:2px}
+header{background:#fff;border-bottom:1px solid var(--line);padding:18px max(20px,calc((100vw - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{font-size:1.05rem;font-weight:850;color:var(--dark)}.brand span{font-weight:500;font-size:.77rem;color:var(--muted);display:block}
+main{max-width:1120px;padding:28px 20px 70px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0 0 6px;font-size:1.9rem;letter-spacing:-.025em}h2{font-size:1.2rem;margin:0 0 15px}h3{font-size:1rem;margin:0 0 7px}
+small,.muted{color:var(--muted)}.btn{border:0;background:var(--primary);color:#fff;border-radius:10px;padding:10px 17px;font-weight:700;cursor:pointer}.btn.secondary{background:#f0e9f5;color:#543979}.btn.ghost{background:#fff;color:var(--primary);border:1px solid var(--line)}.btn.warn{background:#fff1e7;color:#a34e22}.btn:disabled{opacity:.55;cursor:not-allowed}.btn.tiny{padding:6px 10px;font-size:.8rem}
+.card{background:#fff;padding:23px;border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 22px #2d183b07}
+.login{width:min(100%,435px);margin:45px auto}.login h1{font-size:1.5rem}
+label{display:block;font-size:.84rem;font-weight:720;color:#55485e;margin-bottom:13px}
+input,select{display:block;width:100%;padding:10px 12px;margin-top:5px;border:1px solid #d7cbdc;border-radius:9px;background:#fff;color:var(--ink)}
+input[type="checkbox"]{display:inline-block;width:auto;margin:0 8px 0 0;accent-color:var(--primary)}label.check{display:flex;align-items:start;gap:4px}
+.message{color:#8b382c;font-weight:650;font-size:.86rem;min-height:1.3em;margin:10px 0}.message.ok{color:var(--green)}
+.tabs{display:flex;gap:9px;margin:22px 0 16px;flex-wrap:wrap}.tab{padding:9px 16px;border:1px solid var(--line);background:#fff;border-radius:25px;color:#534862;font-weight:700;cursor:pointer}.tab[aria-selected="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:15px}
+.profile{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.profile-body{padding:17px}.profile-head{display:flex;align-items:center;justify-content:space-between;gap:9px}.status{display:inline-block;border-radius:20px;padding:4px 10px;font-size:.73rem;font-weight:750;background:#f0e9f6;color:#65448c}.status.available{background:#e6f6ec;color:#236c44}.status.pending{background:#fff1d8;color:#835c13}
+.details{display:flex;gap:14px;color:var(--muted);font-size:.85rem;margin:10px 0}.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.table-scroll{overflow:auto}.table{border-collapse:collapse;width:100%;text-align:left;min-width:750px;font-size:.84rem}.table th,.table td{border-bottom:1px solid var(--line);padding:13px 11px;vertical-align:top}.table th{color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em}
+.empty{border:1px dashed #d5c7dd;color:var(--muted);border-radius:13px;padding:30px;text-align:center;background:#fff}
+dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radius:18px;padding:0;box-shadow:0 20px 65px #130c2240}dialog::backdrop{background:#20162aad}.modal{padding:25px}.modal-title{display:flex;justify-content:space-between;align-items:start;gap:10px}.close{border:0;background:#f1edf4;border-radius:50%;font-size:1.4rem;width:36px;height:36px;cursor:pointer}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.wide{grid-column:1/-1}
+.notice{margin-top:12px;color:#665477;background:#f2ecf8;padding:12px;border-radius:9px;font-size:.83rem}
+@media(max-width:590px){h1{font-size:1.5rem}header{padding:14px 18px}.card{padding:18px}.fields{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Campanha de Apadrinhamento <span>Área administrativa da ONG</span></div>
+  <button type="button" class="btn ghost tiny" id="logout" hidden>Sair</button>
+</header>
+<main>
+  <section id="login-section" class="card login">
+    <h1>Acessar gestão</h1>
+    <p class="muted">Entre com sua conta autorizada pela ONG para gerenciar perfis e solicitações.</p>
+    <form id="login-form">
+      <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit" id="login-button">Entrar</button>
+    </form>
+    <p class="message" id="login-message" role="status"></p>
+    <div class="notice">O acesso deve ser concedido por um administrador da ONG. Esta página não permite cadastro público.</div>
+  </section>
+  <section id="dashboard" hidden>
+    <div class="top">
+      <div><h1>Gestão dos apadrinhamentos</h1><p class="muted" id="welcome"></p></div>
+      <button type="button" id="new-profile" class="btn">+ Cadastrar perfil</button>
+    </div>
+    <p class="message" id="dashboard-message" role="status" aria-live="polite"></p>
+    <nav class="tabs" aria-label="Seções">
+      <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="true">Perfis das crianças</button>
+      <button class="tab" id="requests-tab" type="button" data-tab="requests" aria-selected="false">Solicitações</button>
+    </nav>
+    <section id="profiles-panel"><div id="profiles" class="grid"></div></section>
+    <section id="requests-panel" hidden><div class="card table-scroll"><table class="table">
+      <thead><tr><th>Perfil</th><th>Interessado</th><th>WhatsApp</th><th>E-mail</th><th>Situação</th><th>Data</th><th>Ações</th></tr></thead>
+      <tbody id="requests"></tbody>
+    </table><p class="empty" id="requests-empty" hidden>Nenhuma solicitação registrada.</p></div></section>
+  </section>
+</main>
+<dialog id="profile-modal" aria-labelledby="profile-modal-title">
+  <form class="modal" id="profile-form">
+    <div class="modal-title">
+      <h2 id="profile-modal-title">Cadastrar perfil</h2>
+      <button type="button" class="close" id="close-modal" aria-label="Fechar">×</button>
+    </div>
+    <div class="fields">
+      <label>Código do perfil<input name="codigo" maxlength="30" required placeholder="P001"></label>
+      <label>Idade<input name="idade" type="number" min="0" max="17" required></label>
+      <label class="wide">Nome para exibição (autorizado)<input name="nome_exibicao" maxlength="80" placeholder="Nome autorizado ou Perfil 001"></label>
+      <label>Tamanho da roupa<input name="tamanho_roupa" maxlength="20" required></label>
+      <label>Tamanho do calçado<input name="tamanho_calcado" maxlength="20" required></label>
+      <label class="wide">Endereço HTTPS da foto autorizada (opcional)<input name="foto_url" type="url" placeholder="https://..."></label>
+      <label>Ordem na vitrine<input name="ordem" type="number" value="0"></label>
+      <div></div>
+      <label class="check wide"><input name="ativo" type="checkbox" checked>Perfil ativo</label>
+      <label class="check wide"><input name="publicacao_autorizada" type="checkbox">A ONG possui autorização apropriada para publicar as informações deste perfil</label>
+    </div>
+    <div class="notice">Somente perfis ativos e com publicação autorizada aparecem na vitrine pública. Evite sobrenome completo, escola, endereço e outros dados desnecessários.</div>
+    <p class="message" id="profile-message" role="status"></p>
+    <button class="btn" type="submit" id="save-profile">Salvar perfil</button>
+  </form>
+</dialog>
+<script src="./js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js"></script>
+<script>
+'use strict';
+const config=window.CAMPANHA_CONFIG||{};
+const authSection=document.getElementById('login-section');
+const dashboard=document.getElementById('dashboard');
+const msg=document.getElementById('dashboard-message');
+const dialog=document.getElementById('profile-modal');
+const profileForm=document.getElementById('profile-form');
+const profilesEl=document.getElementById('profiles');
+const requestsEl=document.getElementById('requests');
+const loginForm=document.getElementById('login-form');
+let api=null,session=null,children=[],requests=[],editingId=null,role='operador';
+const statusLabels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
+const requestLabels={em_contato:'Em contato',confirmado:'Confirmado',cancelado:'Cancelado'};
+const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);if(cls)el.className=cls;return el;};
+function message(text,error=false){msg.textContent=text;msg.classList.toggle('ok',!error);}
+function authorized(value){
+  authSection.hidden=!value;
+  dashboard.hidden=value;
+  document.getElementById('logout').hidden=value;
+}
+async function apiCall(method,body){
+  if(!session?.access_token)throw Error('Sua sessão expirou. Entre novamente.');
+  const response=await fetch(config.adminEndpoint,{
+    method,
+    headers:{'Authorization':'Bearer '+session.access_token,'apikey':config.supabasePublishableKey,'Content-Type':'application/json'},
+    body:body?JSON.stringify(body):undefined,credentials:'omit',cache:'no-store'
+  });
+  let data={};try{data=await response.json();}catch{}
+  if(!response.ok)throw Error(data.mensagem||'Não foi possível concluir esta operação.');
+  return data;
+}
+async function refresh(){
+  message('Carregando informações...');
+  try{
+    const data=await apiCall('GET');
+    children=data.criancas||[];
+    requests=data.solicitacoes||[];
+    role=data.papel||'operador';
+    document.getElementById('welcome').textContent='Acompanhe os perfis e interesses recebidos.';
+    document.getElementById('new-profile').hidden=role!=='administrador';
+    render();
+    message('');
+  }catch(error){message(error.message,true);}
+}
+function render(){
+  profilesEl.replaceChildren();
+  if(!children.length)profilesEl.appendChild(node('p','Nenhum perfil cadastrado. Use “Cadastrar perfil” para começar.','empty'));
+  for(const p of children){
+    const article=node('article',undefined,'profile');
+    const content=node('div',undefined,'profile-body');
+    const head=node('div',undefined,'profile-head');
+    head.append(node('h3',(p.nome_exibicao||'Perfil '+p.codigo)+' · '+p.codigo));
+    const status=node('span',statusLabels[p.situacao]||p.situacao,'status '+(p.situacao==='disponivel'?'available':p.situacao==='em_contato'?'pending':''));
+    head.appendChild(status);
+    content.appendChild(head);
+    content.appendChild(node('p','Idade: '+p.idade+' anos · Roupa: '+p.tamanho_roupa+' · Calçado: '+p.tamanho_calcado,'details'));
+    content.appendChild(node('p',p.publicacao_autorizada && p.ativo?'Publicado na vitrine':'Não publicado','muted'));
+    const actions=node('div',undefined,'card-actions');
+    if(role==='administrador'){
+      const edit=node('button','Editar','btn secondary tiny');
+      edit.type='button';edit.addEventListener('click',()=>openEditor(p));actions.appendChild(edit);
+    }
+    content.appendChild(actions);
+    article.appendChild(content);
+    profilesEl.appendChild(article);
+  }
+  requestsEl.replaceChildren();
+  document.getElementById('requests-empty').hidden=requests.length>0;
+  const mapping=new Map(children.map(c=>[c.id,c]));
+  for(const r of requests){
+    const tr=document.createElement('tr');
+    const p=mapping.get(r.crianca_id);
+    for(const value of [p?.nome_exibicao||p?.codigo||'Perfil indisponível',r.nome_padrinho,r.telefone,r.email||'—',requestLabels[r.situacao]||r.situacao,new Date(r.criada_em).toLocaleString('pt-BR')]){
+      tr.appendChild(node('td',value));
+    }
+    const td=node('td');
+    if(r.situacao==='em_contato'){
+      const accept=node('button','Confirmar','btn tiny');
+      accept.type='button';accept.addEventListener('click',()=>updateRequest(r,'confirmado'));
+      td.appendChild(accept);td.append(' ');
+    }
+    if(r.situacao!=='cancelado'){
+      const release=node('button','Liberar','btn tiny warn');
+      release.type='button';release.addEventListener('click',()=>updateRequest(r,'cancelado'));
+      td.appendChild(release);
+    }
+    tr.appendChild(td);requestsEl.appendChild(tr);
+  }
+}
+async function updateRequest(request,status){
+  const action=status==='confirmado'?'confirmar':'liberar';
+  if(!confirm('Deseja '+action+' esta solicitação?'))return;
+  try{
+    await apiCall('POST',{acao:'atualizar_solicitacao',id:request.id,situacao:status});
+    await refresh();
+    message('Situação atualizada com sucesso.');
+  }catch(error){message(error.message,true);}
+}
+function openEditor(profile=null){
+  editingId=profile?.id||null;
+  profileForm.reset();
+  document.getElementById('profile-modal-title').textContent=editingId?'Editar perfil':'Cadastrar perfil';
+  const fields=profileForm.elements;
+  if(profile){
+    for(const key of ['codigo','idade','nome_exibicao','tamanho_roupa','tamanho_calcado','foto_url','ordem'])
+      fields.namedItem(key).value=profile[key]??'';
+    fields.namedItem('ativo').checked=!!profile.ativo;
+    fields.namedItem('publicacao_autorizada').checked=!!profile.publicacao_autorizada;
+  }
+  document.getElementById('profile-message').textContent='';
+  dialog.showModal();
+}
+profileForm.addEventListener('submit',async (e)=>{
+  e.preventDefault();
+  const button=document.getElementById('save-profile');button.disabled=true;
+  const fields=profileForm.elements,profile={};
+  for(const key of ['codigo','nome_exibicao','tamanho_roupa','tamanho_calcado','foto_url'])
+    profile[key]=fields.namedItem(key).value.trim();
+  profile.idade=Number(fields.namedItem('idade').value);
+  profile.ordem=Number(fields.namedItem('ordem').value||0);
+  profile.ativo=fields.namedItem('ativo').checked;
+  profile.publicacao_autorizada=fields.namedItem('publicacao_autorizada').checked;
+  const notice=document.getElementById('profile-message');
+  try{
+    await apiCall('POST',{acao:'salvar_crianca',id:editingId,perfil:profile});
+    dialog.close();await refresh();message('Perfil salvo com sucesso.');
+  }catch(error){notice.textContent=error.message;}finally{button.disabled=false;}
+});
+document.getElementById('close-modal').addEventListener('click',()=>dialog.close());
+document.getElementById('new-profile').addEventListener('click',()=>openEditor());
+document.querySelectorAll('[data-tab]').forEach((button)=>{
+  button.addEventListener('click',()=>{
+    const tab=button.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(el=>el.setAttribute('aria-selected',String(el===button)));
+    document.getElementById('profiles-panel').hidden=tab!=='profiles';
+    document.getElementById('requests-panel').hidden=tab!=='requests';
+  });
+});
+loginForm.addEventListener('submit',async(e)=>{
+  e.preventDefault();const btn=document.getElementById('login-button');btn.disabled=true;
+  const email=loginForm.elements.namedItem('email').value;
+  const password=loginForm.elements.namedItem('password').value;
+  try{
+    const {data,error}=await api.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    session=data.session;authorized(false);await refresh();
+  }catch(err){document.getElementById('login-message').textContent=err.message||'Não foi possível entrar.';}
+  finally{btn.disabled=false;}
+});
+document.getElementById('logout').addEventListener('click',async()=>{
+  try{await api.auth.signOut();}finally{session=null;authorized(true);loginForm.reset();message('');}
+});
+async function start(){
+  if(!config.supabaseUrl||!config.supabasePublishableKey||!config.adminEndpoint||!window.supabase){
+    document.getElementById('login-message').textContent='A conexão com a gestão não está disponível.';
+    return;
+  }
+  api=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
+  const {data,error}=await api.auth.getSession();
+  if(!error&&data.session){session=data.session;authorized(false);await refresh();}
+}
+start();
+</script>
+</body>
+</html>
