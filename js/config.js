@@ -4,6 +4,10 @@
 window.CAMPANHA_CONFIG = Object.freeze({
   projectId: 'wsixoeonopxejapfxjms',
   publicEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica',
-  publicEndpointEnabled: false, // só habilitar após instalar e homologar a API
+  publicEndpointEnabled: true, // lista somente perfis autorizados da API
+  submissionsEnabled: false, // liberar após configurar Turnstile e testar envios
+  supabaseUrl: 'https://wsixoeonopxejapfxjms.supabase.co',
+  supabasePublishableKey: 'sb_publishable_wXhJrU-1STQJnHEmkQLZ_g_q-Fg6WEF', // chave PUBLICÁVEL (não é segredo)
+  adminEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-admin',
   turnstileSiteKey: null, // site key pública da Cloudflare; segredo fica no Supabase
 });
