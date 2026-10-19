@@ -1,55 +1,85 @@
 # Campanha de Apadrinhamento — ONG
 
-Sistema real de apadrinhamento que será incorporado ao site Wix da ONG, com vitrine independente no GitHub Pages e banco Supabase institucional.
+Sistema independente da campanha de apadrinhamento, hospedado pelo GitHub Pages e preparado para incorporação no Wix da ONG. **Projeto real, ainda em configuração:** não divulgar para interessados até concluir a homologação.
 
-**Situação: EM IMPLANTAÇÃO — não receber dados reais até a homologação.**
-A página pública não apresenta perfis fictícios; os cadastros de menores precisam de autorização para publicação.
+## Onde acessar
 
-## Endereços
+- [Vitrine pública](https://mateuscrlopes.github.io/apadrinhamento-ong/)
+- [Área de gestão](https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html)
+- [Projeto Supabase institucional](https://supabase.com/dashboard/project/wsixoeonopxejapfxjms)
+- [Verificações da API no GitHub Actions](https://github.com/mateuscrlopes/apadrinhamento-ong/actions)
 
-- Código: https://github.com/mateuscrlopes/apadrinhamento-ong
-- Vitrine (GitHub Pages): https://mateuscrlopes.github.io/apadrinhamento-ong/
-- Projeto Supabase da ONG: `wsixoeonopxejapfxjms` (usar o projeto corporativo, nunca LifeOS/Nordestrip).
+## O que está instalado
 
-## Arquivos
+- [x] Banco `criancas`, `solicitacoes` e `equipe_ong`, com RLS habilitado e acesso público às tabelas revogado.
+- [x] Reserva atômica, evitando interesse duplicado pelo mesmo perfil.
+- [x] Função `campanha-publica` publicada, com leitura de perfis autorizados e validação do Turnstile no registro de interesse.
+- [x] Função `campanha-admin` publicada, com validação de JWT e lista de autorizados em `equipe_ong`.
+- [x] Vitrine e formulário em `index.html`.
+- [x] Painel `admin.html`: login, inclusão e alteração de perfis, consulta e confirmação/cancelamento de solicitações.
+- [x] Teste automatizado de consulta pública e negação de acesso administrativo sem autenticação.
+- [ ] Cadastrar primeiro usuário autorizado em Supabase Auth e autorizar seu acesso administrativo.
+- [ ] Configurar Cloudflare Turnstile (chave pública no frontend e segredo exclusivamente no Supabase).
+- [ ] Homologar fluxo completo pelo navegador: login, cadastro, apadrinhamento, confirmação e liberação.
+- [ ] Acrescentar envio de e-mail institucional para novas solicitações e histórico das notificações.
+- [ ] Construir envio de fotos autorizado diretamente pelo painel (atualmente aceita somente URL HTTPS de imagem).
+- [ ] Aprovar aviso de privacidade, dados e fotografias; inserir somente perfis reais autorizados.
+- [ ] Incorporar a vitrine ao Wix e testar dispositivos móveis.
 
-- `index.html`: interface pública responsiva, filtros, estatísticas e formulário protegido com Turnstile.
-- `js/config.js`: endereço da API, controle da ativação e chave pública Turnstile.
-- `database/instalacao.sql`: tabelas, RLS, revogação de acesso público e rotinas atômicas de reserva/confirmação/cancelamento.
-- `supabase/functions/campanha-publica/index.ts`: consulta apenas perfis publicados e recebe solicitações verificadas.
-- `supabase/config.toml`: configura que a função pública não exige JWT de visitante (proteção é realizada por validação + Turnstile no servidor).
+## Como cadastrar o primeiro administrador
 
-## Plano de implantação (não executado ainda)
+A autorização para acessar o dashboard precisa existir em **duas camadas**: usuário em Supabase Auth e vínculo ativo na tabela `equipe_ong`.
 
-1. Obter permissão para gerenciar o projeto Supabase corporativo neste ChatGPT.
-2. **Revisar e executar** `database/instalacao.sql` no SQL Editor do projeto correto.
-3. Criar widget gratuito Cloudflare Turnstile com hostname `mateuscrlopes.github.io`.
-4. Em Supabase > Edge Functions > Secrets, configurar `CLOUDFLARE_TURNSTILE_SECRET_KEY` com a **chave secreta** Turnstile, exclusivamente no servidor. Nunca gravá-la no GitHub.
-5. Publicar `campanha-publica` no Supabase com `verify_jwt = false`. Essa função atende visitantes sem autenticação, mas exige a validação Turnstile no POST.
-6. Em `js/config.js`, preencher `turnstileSiteKey` com **chave pública** do Turnstile; somente após homologar o backend alterar `publicEndpointEnabled: true`.
-7. Confirmar que GET retorna somente perfis ativos com publicação autorizada e não revela nome/telefone/e-mail dos padrinhos.
-8. Testar reservas simultâneas, formulários inválidos, bloqueio de envios automatizados, consentimento e tratamento de erros.
-9. Implementar e homologar o **painel administrativo privado** e acesso da equipe; não inserir dados reais antes dele estar pronto.
-10. Obter as autorizações e revisar aviso de privacidade, fotos, retenção de contatos e responsividade antes de incorporar no Wix.
+1. Entre no [Supabase institucional](https://supabase.com/dashboard/project/wsixoeonopxejapfxjms).
+2. Em **Authentication → Users**, use **Add user / Invite user** para cadastrar o e-mail institucional autorizado. Não crie contas com senhas compartilhadas.
+3. Após o usuário aparecer em Authentication, abra **SQL Editor** neste MESMO projeto e execute o SQL abaixo, substituindo o endereço pelo e-mail cadastrado:
 
-## Contrato da função
+```sql
+insert into public.equipe_ong (usuario_id, papel, ativo)
+select id, 'administrador', true
+from auth.users
+where lower(email) = lower('EMAIL_DA_PESSOA_AUTORIZADA@ONG.ORG')
+on conflict (usuario_id) do update
+  set papel = excluded.papel, ativo = true;
+```
 
-GET `/functions/v1/campanha-publica` → `{"perfis":[{"id":"UUID","codigo":"P001","nome_exibicao":"...","idade":7,"tamanho_roupa":"8","tamanho_calcado":"29","foto_url":null,"situacao":"disponivel"}]}`.
-Exibe somente perfis autorizados pela ONG.
+4. No SQL Editor, confirme o registro com:
 
-POST `/functions/v1/campanha-publica` →
-`{"acao":"solicitar","crianca_id":"UUID","nome":"...","telefone":"...","email":"...","autorizou_contato":true,"turnstile_token":"...","website":""}`
-→ `{"sucesso":true}` apenas quando o interesse for registrado de maneira atômica.
+```sql
+select e.usuario_id, e.papel, e.ativo
+from public.equipe_ong e;
+```
 
-## Regras de segurança
+5. A pessoa já convidada pode abrir o [painel administrativo](https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html) e entrar com e-mail e senha do Supabase Auth.
+6. **Importante:** acesso de administrador autoriza cadastrar perfis com dados sensíveis. A ONG deve revisar quem possui essa autorização.
 
-- Código público: nenhuma chave secreta, senha, token de administração ou dado pessoal neste repositório.
-- O banco não concede acesso direto a tabelas a visitantes; RLS habilitado.
-- Funções SQL privilegiadas possuem `search_path = ''` e execução permitida apenas ao `service_role`.
-- As rotinas de gravação dependem de validação de dados + Turnstile no servidor; a API ainda está desligada no cliente.
-- Adicionar proteção contra abuso/limites de requisições se o volume de campanha exigir.
-- A ONG deve aprovar divulgação de imagens e informações dos menores e definir um aviso de privacidade válido.
+## Ativar o apadrinhamento público
 
-## Monitoramento futuro
+A vitrine consulta a API e exibe apenas `ativo=true` e `publicacao_autorizada=true`. O recebimento de solicitações está intencionalmente **desligado** em `js/config.js` (`submissionsEnabled:false`).
 
-Configurar monitoramento depois dos testes. Não prometer que consultas agendadas impeçam qualquer pausa do plano gratuito.
+Antes de ligar:
+
+1. Criar o widget Cloudflare Turnstile para `mateuscrlopes.github.io` (action `apadrinhar`).
+2. Configurar o **secret** `CLOUDFLARE_TURNSTILE_SECRET_KEY` em Supabase → Edge Functions → Secrets. Jamais incluí-lo no GitHub.
+3. Preencher `turnstileSiteKey` com **chave pública** no `js/config.js`.
+4. Testar que uma solicitação é criada e bloqueia o perfil, e que a segunda falha (HTTP 409), além dos casos de erro de captcha.
+5. Só depois definir `submissionsEnabled:true` em `js/config.js`.
+
+## Estrutura
+
+- `index.html`: vitrine.
+- `admin.html`: gestão protegida.
+- `js/config.js`: configuração **pública**.
+- `database/instalacao.sql`: estrutura inicial (já executada neste projeto; não reexecutar em outros bancos).
+- `supabase/functions/campanha-publica/index.ts`: API pública, Turnstile e reserva atômica.
+- `supabase/functions/campanha-admin/index.ts`: API protegida para gestão.
+- `supabase/config.toml`: declara verificação de JWT feita no próprio serviço.
+- `.github/workflows/verificar-api.yml`: testes de consulta pública e bloqueio de acesso administrativo.
+
+## Segurança e privacidade
+
+- O GitHub é **público**. Não gravar dados pessoais, senhas, tokens ou chaves privilegiadas nele.
+- A chave de API **publicável** do Supabase no frontend não é segredo; segurança depende das regras RLS e das checagens de autorização no servidor.
+- A lista de interessados, seus contatos e os perfis não publicados não são acessíveis sem login de membro da equipe.
+- Não incluir sobrenomes completos, endereços, instituições de ensino ou fotografias sem autorização apropriada.
+- A ONG precisa definir aviso de privacidade, conservação e exclusão de dados e colaboradores com acesso.
