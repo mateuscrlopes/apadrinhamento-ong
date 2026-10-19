@@ -10,7 +10,7 @@
     :root{--purple:#7149a5;--purple-dark:#452577;--rose:#e2a7c4;--ink:#2c2336;--muted:#655e6d;--border:#e9e1ee;--surface:#fff;--bg:#faf7fc;--radius:20px}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
     button,input{font:inherit} button{cursor:pointer} :focus-visible{outline:3px solid #f0a5cf;outline-offset:3px} .wrap{max-width:1110px;padding:0 22px;margin:auto}
-    [hidden]{display:none!important}.profile-photo{width:100%;height:100%;object-fit:cover}.consent{display:flex;gap:10px;align-items:flex-start;font-size:.83rem;line-height:1.4;color:var(--muted);margin:10px 0 16px}.consent input{margin-top:3px;accent-color:var(--purple)}.form-message{color:#92382f!important;font-weight:650}.success-message{color:#24613d!important;padding:18px;background:#e9f7ef;border-radius:12px}
+    [hidden]{display:none!important}.profile-photo{width:100%;height:100%;object-fit:cover}.honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;opacity:0!important}.captcha{margin:12px 0 16px}.consent{display:flex;gap:10px;align-items:flex-start;font-size:.83rem;line-height:1.4;color:var(--muted);margin:10px 0 16px}.consent input{margin-top:3px;accent-color:var(--purple)}.form-message{color:#92382f!important;font-weight:650}.success-message{color:#24613d!important;padding:18px;background:#e9f7ef;border-radius:12px}
     .hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,#503083 0%,#744cac 70%,#955fba 100%);padding:54px 0 58px}
     .hero:after{content:"";position:absolute;width:360px;height:360px;right:-110px;top:-130px;border:75px solid #ffffff14;border-radius:50%;pointer-events:none}
     .hero-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -113,11 +113,14 @@
         <input id="field-consent" type="checkbox" required>
         <span>Autorizo a ONG a utilizar meus dados de contato exclusivamente para dar continuidade ao meu interesse no apadrinhamento, conforme o aviso de privacidade da campanha.</span>
       </label>
+      <input type="text" id="field-trap" name="website" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div id="turnstile-container" class="captcha" aria-label="Verificação de segurança"></div>
       <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
       <button class="cta" type="submit" id="submit-interest">Enviar interesse</button>
     </form>
   </dialog>
   <script src="./js/config.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script>
     'use strict';
     const config=window.CAMPANHA_CONFIG || {};
@@ -132,6 +135,26 @@
     let perfis=[];
     let selectedProfile=null;
     let activeFilter='todos';
+    let captchaToken='';
+    let captchaWidgetId=null;
+    function prepareCaptcha(){
+      if(!config.turnstileSiteKey || !window.turnstile){
+        formMessage.textContent='A validação de segurança está em preparação. Tente novamente mais tarde.';
+        return;
+      }
+      captchaToken='';
+      if(captchaWidgetId!==null){
+        window.turnstile.reset(captchaWidgetId);
+        return;
+      }
+      captchaWidgetId=window.turnstile.render('#turnstile-container',{
+        sitekey:config.turnstileSiteKey,
+        action:'apadrinhar',
+        callback:function(token){captchaToken=token;formMessage.textContent='';},
+        'expired-callback':function(){captchaToken='';},
+        'error-callback':function(){captchaToken='';}
+      });
+    }
     const silhouette='<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="33" r="17"></circle><path d="M18 88c1-20 13-33 32-33s31 13 32 33"></path></svg>';
 
     function showStatus(message){
@@ -184,6 +207,7 @@
         submit.disabled=false;
         submit.textContent='Enviar interesse';
         dialog.showModal();
+        prepareCaptcha();
       });
       content.appendChild(button);
       card.append(image,content);
@@ -238,6 +262,7 @@
       const nome=document.getElementById('field-name').value.trim();
       const telefone=document.getElementById('field-phone').value.trim();
       const email=document.getElementById('field-email').value.trim();
+      if(!captchaToken){formMessage.textContent='Conclua a verificação de segurança antes de enviar.';return;}
       if(nome.length<3 || telefone.replace(/\D/g,'').length<10 || !document.getElementById('field-consent').checked){
         formMessage.textContent='Confira seu nome, telefone e a autorização de contato.';
         return;
@@ -250,7 +275,7 @@
         const response=await fetch(endpoint,{
           method:'POST',headers:{'Content-Type':'application/json'},
           credentials:'omit',
-          body:JSON.stringify({acao:'solicitar',crianca_id:selectedProfile.id,nome,telefone,email,autorizou_contato:true})
+          body:JSON.stringify({acao:'solicitar',crianca_id:selectedProfile.id,nome,telefone,email,autorizou_contato:true,turnstile_token:captchaToken,website:document.getElementById('field-trap').value})
         });
         const result=await response.json();
         if(!response.ok || result.sucesso!==true){
@@ -262,6 +287,8 @@
         selectedProfile=null;
         await loadProfiles();
       }catch(error){
+        captchaToken='';
+        if(captchaWidgetId!==null && window.turnstile)window.turnstile.reset(captchaWidgetId);
         formMessage.textContent=error.message || 'Não foi possível enviar sua solicitação. Tente novamente.';
       }finally{
         submit.disabled=selectedProfile===null;
