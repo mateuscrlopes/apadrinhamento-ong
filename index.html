@@ -252,7 +252,8 @@
         if(!response.ok || result.sucesso!==true){
           throw Error(result.mensagem || 'Não foi possível enviar a solicitação.');
         }
-        form.replaceChildren(makeElement('p','success-message',
+        const closeArea=form.querySelector('.modal-head');
+        form.replaceChildren(closeArea,makeElement('p','success-message',
           'Recebemos seu interesse! A equipe da ONG entrará em contato pelo telefone informado.'));
         selectedProfile=null;
         await loadProfiles();
