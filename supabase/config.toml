@@ -1,2 +1,6 @@
 [functions.campanha-publica]
 verify_jwt = false
+
+# A validação do token JWT e do papel administrativo é feita no próprio serviço.
+[functions.campanha-admin]
+verify_jwt = false
