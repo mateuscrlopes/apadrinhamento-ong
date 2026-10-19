@@ -196,7 +196,8 @@
       content.appendChild(details);
       const button=makeElement('button','cta',profile.situacao==='disponivel'?'Quero apadrinhar':'Indisponível no momento');
       button.type='button';
-      button.disabled=profile.situacao!=='disponivel';
+      if(profile.situacao==='disponivel' && !config.submissionsEnabled){button.textContent='Apadrinhamento em breve';}
+      button.disabled=profile.situacao!=='disponivel' || !config.submissionsEnabled;
       button.addEventListener('click',function(){
         selectedProfile=profile;
         document.getElementById('chosen-profile').textContent='Você selecionou '+(profile.nome_exibicao || 'o perfil '+profile.codigo)+'.';
@@ -235,6 +236,13 @@
           return profile && typeof profile.id==='string' && categories[profile.situacao] &&
             Number.isInteger(profile.idade) && profile.idade>=0 && profile.idade<19;
         });
+        if(!perfis.length){
+          document.getElementById('stats').hidden=true;
+          document.getElementById('filters').hidden=true;
+          cards.replaceChildren();
+          showStatus('Estamos preparando os perfis para apadrinhamento. Em breve você poderá conhecer as crianças participantes.');
+          return;
+        }
         document.getElementById('total').textContent=perfis.length;
         document.getElementById('available').textContent=perfis.filter(p=>p.situacao==='disponivel').length;
         document.getElementById('sponsored').textContent=perfis.filter(p=>p.situacao==='confirmado').length;
@@ -258,7 +266,7 @@
     dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close();});
     form.addEventListener('submit',async function(event){
       event.preventDefault();
-      if(!selectedProfile || !endpoint || !form.reportValidity())return;
+      if(!selectedProfile || !endpoint || config.submissionsEnabled!==true || !form.reportValidity())return;
       const nome=document.getElementById('field-name').value.trim();
       const telefone=document.getElementById('field-phone').value.trim();
       const email=document.getElementById('field-email').value.trim();
