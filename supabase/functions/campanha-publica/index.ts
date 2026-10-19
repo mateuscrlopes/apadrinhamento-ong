@@ -1,7 +1,7 @@
 // Supabase Edge Function: campanha-publica
 // Deploy with --no-verify-jwt because visitors are not authenticated.
 // POST requires Cloudflare Turnstile verification; keep disabled until configured.
-// Secret CLOUDFlARE_TURNSTILE_SECRET_KEY must be configured in Supabase.
+// Secret CLOUDFLARE_TURNSTILE_SECRET_KEY must be configured in Supabase.
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 
 const SITE_ORIGIN = "https://mateuscrlopes.github.io";
