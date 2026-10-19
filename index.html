@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#7149a5">
+  <meta name="description" content="Campanha de apadrinhamento da ONG — protótipo de interface.">
+  <title>Campanha de Apadrinhamento | Prévia</title>
+  <style>
+    :root{--purple:#7149a5;--purple-dark:#452577;--rose:#e2a7c4;--ink:#2c2336;--muted:#655e6d;--border:#e9e1ee;--surface:#fff;--bg:#faf7fc;--radius:20px}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+    button,input{font:inherit} button{cursor:pointer} :focus-visible{outline:3px solid #f0a5cf;outline-offset:3px} .wrap{max-width:1110px;padding:0 22px;margin:auto}
+    .demo{background:#fff1cf;color:#654808;text-align:center;padding:9px 18px;font-size:.86rem;font-weight:650;border-bottom:1px solid #efdca2}
+    .hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,#503083 0%,#744cac 70%,#955fba 100%);padding:54px 0 58px}
+    .hero:after{content:"";position:absolute;width:360px;height:360px;right:-110px;top:-130px;border:75px solid #ffffff14;border-radius:50%;pointer-events:none}
+    .hero-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .hero-copy{max-width:690px}.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;font-weight:750;color:#f2dff8}
+    h1{font-size:clamp(2rem,5vw,3.7rem);letter-spacing:-.035em;line-height:1.07;margin:14px 0 20px;font-weight:800}
+    .hero p{color:#f1e7f9;max-width:620px;margin:0 0 23px;font-size:1.04rem}
+    .hero a{display:inline-block;padding:12px 22px;background:#fff;color:#60358d;text-decoration:none;font-weight:750;border-radius:30px;box-shadow:0 7px 24px #28104723}
+    .hero-art{width:185px;height:185px;border:2px solid #ffffff35;flex:none;border-radius:50%;display:grid;place-items:center;background:#ffffff14}
+    .hero-art svg{width:92px;height:92px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    main{padding:42px 0 52px}.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}
+    h2{font-size:clamp(1.5rem,3vw,2.05rem);line-height:1.2;letter-spacing:-.025em;margin:0 0 8px}
+    .subtitle{color:var(--muted);margin:0;max-width:670px}.stats{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{background:#fff;border:1px solid var(--border);padding:12px 17px;border-radius:15px;min-width:97px;text-align:center}
+    .stat strong{font-size:1.45rem;line-height:1.2;display:block;color:var(--purple-dark)}.stat span{font-size:.75rem;color:var(--muted)}
+    .filters{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:0 0 24px}.filter{border:1px solid #ded0e7;color:#5c4c69;background:#fff;border-radius:30px;padding:9px 16px;font-weight:650;font-size:.9rem}
+    .filter[aria-pressed="true"]{color:#fff;background:var(--purple);border-color:var(--purple)} .count{margin-left:auto;font-size:.85rem;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:0 7px 20px #39224509;display:flex;flex-direction:column}
+    .photo{height:190px;position:relative;background:linear-gradient(140deg,#f8e7f2,#e4d8f3);display:grid;place-items:center}
+    .photo:nth-child(3n){background:#f5e2ed}
+    .photo svg{height:106px;width:106px;stroke:#bea8d5;fill:none;stroke-width:1.2;stroke-linecap:round}
+    .photo .placeholder{position:absolute;bottom:12px;left:14px;color:#624880;font-size:.72rem;background:#ffffffda;border-radius:20px;padding:5px 11px}
+    .photo .tag{position:absolute;right:12px;top:12px}
+    .tag{display:inline-block;font-size:.76rem;font-weight:750;border-radius:22px;padding:5px 11px;background:#e9f7ee;color:#277347}
+    .tag.contact{background:#fff0d2;color:#8b620d}.tag.sponsored{background:#efe6f7;color:#6e4893}
+    .info{padding:20px;display:flex;flex-direction:column;flex:1}
+    .info h3{font-size:1.17rem;margin:0 0 4px}.age{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+    .details{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid var(--border);padding:15px 0 18px;font-size:.87rem;color:var(--muted)}
+    .details strong{display:block;color:var(--ink);font-size:.96rem}
+    .cta{margin-top:auto;border:0;border-radius:12px;background:var(--purple);color:#fff;font-weight:750;padding:12px 14px;text-align:center;width:100%}
+    .cta:disabled{background:#ece9ef;color:#817987;cursor:not-allowed}
+    .empty{grid-column:1/-1;text-align:center;background:#fff;border:1px dashed #d9c5e4;padding:32px;border-radius:16px;color:var(--muted)}
+    .note{margin-top:26px;padding:16px 20px;background:#f3ecf9;border:1px solid #e3d2ef;border-radius:14px;color:#614976;font-size:.9rem}
+    footer{text-align:center;color:#746c79;font-size:.83rem;padding:0 0 35px}
+    dialog{border:0;border-radius:22px;padding:0;max-width:min(94vw,480px);width:100%;box-shadow:0 26px 80px #1d12294d}
+    dialog::backdrop{background:#261d37ad}.modal-body{padding:30px}.modal-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+    .modal-head h2{font-size:1.55rem}.close{border:0;background:#f2edf5;color:#624c73;width:34px;height:34px;border-radius:50%;font-size:1.3rem}
+    .modal-body p{color:var(--muted);font-size:.95rem;margin:10px 0 18px}.field{display:block;font-size:.87rem;font-weight:700;margin-bottom:13px}
+    .field input{margin-top:5px;display:block;width:100%;border:1px solid #ddd3e4;border-radius:10px;padding:11px 12px;background:#f7f5f8}
+    .field input:disabled{cursor:not-allowed}.disclaimer{padding:12px;background:#fff5de;color:#795815;border-radius:9px;font-size:.85rem}
+    @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.heading{align-items:start;flex-direction:column}.hero-art{width:130px;height:130px}.hero-art svg{width:72px;height:72px}}
+    @media(max-width:540px){.wrap{padding:0 16px}.hero{padding:42px 0}.hero-art{display:none}.grid{grid-template-columns:1fr;gap:15px}main{padding:30px 0}.photo{height:195px}.filters{gap:7px}.filter{padding:8px 12px;font-size:.82rem}.count{width:100%;margin:0}.stat{flex:1} .modal-body{padding:20px}}
+  </style>
+</head>
+<body>
+  <div class="demo" role="status">AMBIENTE DE DEMONSTRAÇÃO — perfis fictícios e solicitações desativadas</div>
+  <header class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">♡ Campanha solidária</span>
+        <h1>Pequenos gestos.<br>Grandes histórias.</h1>
+        <p>Conheça os perfis disponíveis para apadrinhamento. Cada gesto de carinho pode fazer a diferença. Este é um protótipo visual para aprovação da ONG.</p>
+        <a href="#perfis">Conhecer os perfis ↓</a>
+      </div>
+      <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 82 15 49C-8 23 28-5 50 29 72-5 108 23 85 49L50 82Z"/><path d="M50 63 30 45M50 63 71 43"/></svg></div>
+    </div>
+  </header>
+
+  <main class="wrap" id="perfis">
+    <div class="heading">
+      <div>
+        <h2>Encontre um perfil para apadrinhar</h2>
+        <p class="subtitle">Consulte os perfis e acompanhe a disponibilidade. As informações nesta prévia são inteiramente fictícias.</p>
+      </div>
+      <div class="stats" aria-label="Resumo dos perfis fictícios">
+        <div class="stat"><strong id="total">0</strong><span>Perfis</span></div>
+        <div class="stat"><strong id="available">0</strong><span>Disponíveis</span></div>
+        <div class="stat"><strong id="sponsored">0</strong><span>Apadrinhados</span></div>
+      </div>
+    </div>
+    <nav class="filters" aria-label="Filtrar perfis">
+      <button class="filter" type="button" data-filter="todos" aria-pressed="true">Todos</button>
+      <button class="filter" type="button" data-filter="disponivel" aria-pressed="false">Disponíveis</button>
+      <button class="filter" type="button" data-filter="em_contato" aria-pressed="false">Em contato</button>
+      <button class="filter" type="button" data-filter="confirmado" aria-pressed="false">Apadrinhados</button>
+      <span class="count" id="result-count" aria-live="polite"></span>
+    </nav>
+    <div class="grid" id="cards" aria-live="polite"></div>
+    <div class="note"><strong>Importante:</strong> a página ainda não está conectada ao banco de dados. O formulário está desativado para impedir o envio de informações pessoais durante os testes. As fotos definitivas só serão publicadas mediante autorização adequada.</div>
+  </main>
+  <footer class="wrap">Campanha de Apadrinhamento · Prévia para validação interna</footer>
+
+  <dialog id="interest" aria-labelledby="dialog-title">
+    <div class="modal-body">
+      <div class="modal-head"><h2 id="dialog-title">Quero apadrinhar</h2><button type="button" class="close" id="close-dialog" aria-label="Fechar">×</button></div>
+      <p id="chosen-profile"></p>
+      <label class="field">Nome completo<input autocomplete="off" type="text" placeholder="Seu nome" disabled></label>
+      <label class="field">WhatsApp<input autocomplete="off" type="tel" placeholder="(00) 00000-0000" disabled></label>
+      <label class="field">E-mail (opcional)<input autocomplete="off" type="email" placeholder="seuemail@exemplo.com" disabled></label>
+      <p class="disclaimer">Esta é apenas uma prévia. Nenhum dado é coletado ou enviado. O formulário será ativado após a configuração e os testes de segurança do Supabase.</p>
+      <button class="cta" type="button" disabled>Solicitações ainda não disponíveis</button>
+    </div>
+  </dialog>
+
+  <script>
+    'use strict';
+    // Somente registros fictícios. Não substituir por dados reais neste arquivo.
+    const perfis = [
+      {codigo:'P001',idade:5,roupa:'6',calcado:'27',status:'disponivel'},
+      {codigo:'P002',idade:8,roupa:'10',calcado:'31',status:'disponivel'},
+      {codigo:'P003',idade:4,roupa:'4',calcado:'25',status:'em_contato'},
+      {codigo:'P004',idade:11,roupa:'12',calcado:'34',status:'disponivel'},
+      {codigo:'P005',idade:7,roupa:'8',calcado:'29',status:'confirmado'},
+      {codigo:'P006',idade:9,roupa:'10',calcado:'32',status:'disponivel'}
+    ];
+    const labels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
+    const cardContainer=document.getElementById('cards');
+    const dialog=document.getElementById('interest');
+    const silhouette='<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="33" r="17"></circle><path d="M18 88c1-20 13-33 32-33s31 13 32 33"></path></svg>';
+    function makeCard(p){
+      const card=document.createElement('article');
+      card.className='card';
+      const statusClass=p.status==='em_contato'?'contact':p.status==='confirmado'?'sponsored':'';
+      const disabled=p.status!=='disponivel'?'disabled':'';
+      card.innerHTML='<div class="photo">'+silhouette+
+        '<span class="placeholder">Imagem ilustrativa</span>'+
+        '<span class="tag '+statusClass+'">'+labels[p.status]+'</span></div>'+
+        '<div class="info"><h3>Perfil '+p.codigo.slice(1)+'</h3>'+
+        '<p class="age">'+p.idade+' anos · Código '+p.codigo+'</p>'+
+        '<div class="details"><div>Roupa<strong>Tamanho '+p.roupa+'</strong></div>'+
+        '<div>Calçado<strong>Nº '+p.calcado+'</strong></div></div>'+
+        '<button class="cta" type="button" '+disabled+'>'+
+        (p.status==='disponivel'?'Quero apadrinhar':'Indisponível no momento')+
+        '</button></div>';
+      const btn=card.querySelector('button');
+      if(p.status==='disponivel')btn.addEventListener('click',function(){
+        document.getElementById('chosen-profile').textContent='Você selecionou o perfil '+p.codigo+'.';
+        dialog.showModal();
+      });
+      return card;
+    }
+    function render(filter){
+      cardContainer.replaceChildren();
+      const visible=filter==='todos'?perfis:perfis.filter(function(p){return p.status===filter;});
+      visible.forEach(function(p){cardContainer.appendChild(makeCard(p));});
+      if(!visible.length){const el=document.createElement('p');el.className='empty';el.textContent='Nenhum perfil encontrado nesta categoria.';cardContainer.appendChild(el);}
+      document.getElementById('result-count').textContent=visible.length+' perfil(is) exibido(s)';
+    }
+    document.getElementById('total').textContent=perfis.length;
+    document.getElementById('available').textContent=perfis.filter(function(p){return p.status==='disponivel';}).length;
+    document.getElementById('sponsored').textContent=perfis.filter(function(p){return p.status==='confirmado';}).length;
+    document.querySelectorAll('[data-filter]').forEach(function(button){
+      button.addEventListener('click',function(){
+        document.querySelectorAll('[data-filter]').forEach(function(b){b.setAttribute('aria-pressed',String(b===button));});
+        render(button.dataset.filter);
+      });
+    });
+    document.getElementById('close-dialog').addEventListener('click',function(){dialog.close();});
+    dialog.addEventListener('click',function(e){if(e.target===dialog)dialog.close();});
+    render('todos');
+  </script>
+</body>
+</html>
