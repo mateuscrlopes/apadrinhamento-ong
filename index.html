@@ -179,6 +179,10 @@
         document.getElementById('chosen-profile').textContent='Você selecionou '+(profile.nome_exibicao || 'o perfil '+profile.codigo)+'.';
         form.reset();
         formMessage.textContent='';
+        formMessage.classList.remove('success-message');
+        const submit=document.getElementById('submit-interest');
+        submit.disabled=false;
+        submit.textContent='Enviar interesse';
         dialog.showModal();
       });
       content.appendChild(button);
@@ -252,16 +256,16 @@
         if(!response.ok || result.sucesso!==true){
           throw Error(result.mensagem || 'Não foi possível enviar a solicitação.');
         }
-        const closeArea=form.querySelector('.modal-head');
-        form.replaceChildren(closeArea,makeElement('p','success-message',
-          'Recebemos seu interesse! A equipe da ONG entrará em contato pelo telefone informado.'));
+        form.reset();
+        formMessage.classList.add('success-message');
+        formMessage.textContent='Recebemos seu interesse! A equipe da ONG entrará em contato pelo telefone informado.';
         selectedProfile=null;
         await loadProfiles();
       }catch(error){
         formMessage.textContent=error.message || 'Não foi possível enviar sua solicitação. Tente novamente.';
       }finally{
-        submit.disabled=false;
-        submit.textContent='Enviar interesse';
+        submit.disabled=selectedProfile===null;
+        submit.textContent=selectedProfile===null?'Solicitação enviada':'Enviar interesse';
       }
     });
     loadProfiles();
