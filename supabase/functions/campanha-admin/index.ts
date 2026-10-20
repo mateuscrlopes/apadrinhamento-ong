@@ -9,7 +9,8 @@ const URL = Deno.env.get("SUPABASE_URL") ?? "";
 const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const admin = createClient(URL, KEY, { auth: { persistSession:false, autoRefreshToken:false } });
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const states = ["em_contato","confirmado","cancelado"];
+const BUCKET = "fotos-criancas-ame";
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const cors=(origin:string|null)=>({
   "Access-Control-Allow-Origin":origin===SITE_ORIGIN?SITE_ORIGIN:SITE_ORIGIN,
   "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info",
@@ -29,17 +30,16 @@ function validProfile(input:unknown) {
   const p=input as Record<string,unknown>;
   const codigo=str(p.codigo,30),nome=optional(p.nome_exibicao,80);
   const idade=p.idade,roupa=str(p.tamanho_roupa,20),calcado=str(p.tamanho_calcado,20);
-  const foto=optional(p.foto_url,1500);
+  // Fotos são enviadas exclusivamente pelo armazenamento privado da ONG.
   const publicado=p.publicacao_autorizada,ativo=p.ativo;
   const ordem=p.ordem;
   if(!codigo||codigo.length<2||!Number.isInteger(idade)||Number(idade)<0||Number(idade)>17
     ||!validSize(roupa)||!validSize(calcado)||typeof publicado!=="boolean"
     ||typeof ativo!=="boolean"||!Number.isInteger(ordem)||Math.abs(Number(ordem))>1000000
-    ||(foto!==null&&!/^https:\/\/[^ ]+$/i.test(foto))
     ||(p.nome_exibicao!=null&&nome===null))return null;
   return {
     codigo,nome_exibicao:nome,idade:Number(idade),tamanho_roupa:roupa,
-    tamanho_calcado:calcado,foto_url:foto,
+    tamanho_calcado:calcado,foto_url:null,
     publicacao_autorizada:publicado,ativo,ordem:Number(ordem),
     atualizado_em:new Date().toISOString(),
   };
@@ -59,15 +59,86 @@ Deno.serve(async(req)=>{
 
   if(req.method==="GET") {
     const [children,requests]=await Promise.all([
-      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_url,ativo,publicacao_autorizada,ordem,situacao").order("ordem",{ascending:true}).order("codigo").limit(500),
+      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,ativo,publicacao_autorizada,ordem,situacao").order("ordem",{ascending:true}).order("codigo").limit(500),
       admin.from("solicitacoes").select("id,crianca_id,nome_padrinho,telefone,email,situacao,criada_em,atualizada_em").order("criada_em",{ascending:false}).limit(1000)
     ]);
     if(children.error||requests.error)return send({mensagem:"Não foi possível carregar a gestão."},500,origin);
-    return send({criancas:children.data??[],solicitacoes:requests.data??[],papel:team.papel},200,origin);
+    // Links temporários somente após autenticação e verificação de membro ativo.
+    const perfis = await Promise.all((children.data??[]).map(async(child)=>{
+      const {foto_storage_path,...fields}=child;
+      let foto_url: string | null = null;
+      if(foto_storage_path){
+        const {data:signed}=await admin.storage.from(BUCKET).createSignedUrl(foto_storage_path,600);
+        foto_url=signed?.signedUrl??null;
+      }
+      return {...fields,foto_url};
+    }));
+    return send({criancas:perfis,solicitacoes:requests.data??[],papel:team.papel},200,origin);
   }
   if(req.method!=="POST")return send({mensagem:"Método não permitido."},405,origin);
+  const contentType=(req.headers.get("content-type")??"").toLowerCase();
   const length=Number(req.headers.get("content-length")??0);
-  if(length>25000)return send({mensagem:"Arquivo enviado muito grande."},413,origin);
+
+  // A foto pode ser enviada diretamente do painel sem tornar o bucket público.
+  if(contentType.startsWith("multipart/form-data")){
+    if(team.papel!=="administrador")
+      return send({mensagem:"Somente administradores podem enviar fotografias."},403,origin);
+    if(length>MAX_PHOTO_BYTES+100000)
+      return send({mensagem:"Foto acima de 4 MB."},413,origin);
+
+    let form:FormData;
+    try { form=await req.formData(); }
+    catch { return send({mensagem:"Envio de foto inválido."},400,origin); }
+    if(form.get("acao")!=="enviar_foto")
+      return send({mensagem:"Ação de envio inválida."},400,origin);
+    const id=form.get("crianca_id"), foto=form.get("foto");
+    if(typeof id!=="string"||!uuid.test(id)||!(foto instanceof File))
+      return send({mensagem:"Selecione um perfil e uma fotografia válidos."},400,origin);
+    if(foto.size<100 || foto.size>MAX_PHOTO_BYTES)
+      return send({mensagem:"A fotografia deve ter no máximo 4 MB."},413,origin);
+
+    const allowed:Record<string,string>={
+      "image/jpeg":"jpg","image/png":"png","image/webp":"webp"
+    };
+    const extension=allowed[foto.type];
+    if(!extension)return send({mensagem:"Use uma foto JPG, PNG ou WebP."},415,origin);
+    const bytes=new Uint8Array(await foto.arrayBuffer());
+    const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+    const png=bytes.length>=8&&[137,80,78,71,13,10,26,10].every((n,i)=>bytes[i]===n);
+    const webp=bytes.length>=12&&
+      String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&
+      String.fromCharCode(...bytes.slice(8,12))==="WEBP";
+    const valid=extension==="jpg"?jpg:extension==="png"?png:webp;
+    if(!valid)return send({mensagem:"O arquivo não parece ser uma imagem válida."},415,origin);
+
+    const {data:record,error:findError}=await admin.from("criancas")
+      .select("id,foto_storage_path").eq("id",id).maybeSingle();
+    if(findError||!record)return send({mensagem:"Perfil não encontrado."},404,origin);
+
+    const path=id+"/"+crypto.randomUUID()+"."+extension;
+    const {error:uploadError}=await admin.storage.from(BUCKET).upload(path,bytes,{
+      contentType:foto.type,upsert:false,cacheControl:"300"
+    });
+    if(uploadError){
+      console.error("Falha ao armazenar foto",uploadError.message);
+      return send({mensagem:"Não foi possível armazenar a fotografia."},500,origin);
+    }
+    const {data:saved,error:saveError}=await admin.from("criancas")
+      .update({foto_storage_path:path,foto_url:null,atualizado_em:new Date().toISOString()})
+      .eq("id",id).select("id").maybeSingle();
+    if(saveError||!saved){
+      await admin.storage.from(BUCKET).remove([path]);
+      return send({mensagem:"Foto enviada, mas não foi possível vinculá-la ao perfil."},500,origin);
+    }
+    if(record.foto_storage_path && record.foto_storage_path!==path){
+      const {error:deleteOldError}=await admin.storage.from(BUCKET)
+        .remove([record.foto_storage_path]);
+      if(deleteOldError)console.error("Falha ao limpar foto substituída",deleteOldError.message);
+    }
+    return send({sucesso:true,mensagem:"Foto salva com segurança."},200,origin);
+  }
+  const jsonLength=Number(req.headers.get("content-length")??0);
+  if(jsonLength>25000)return send({mensagem:"Solicitação muito grande."},413,origin);
   if(!(req.headers.get("content-type")??"").startsWith("application/json"))return send({mensagem:"Formato inválido."},415,origin);
   let body:Record<string,unknown>;
   try { body=await req.json(); if(!body||Array.isArray(body)||typeof body!=="object")throw Error(); }
