@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
   }
   if (req.method === "GET") {
     const { data, error } = await client.from("criancas")
-      .select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_url,situacao")
+      .select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,situacao")
       .eq("ativo", true).eq("publicacao_autorizada", true)
       .order("ordem", { ascending: true }).order("codigo", { ascending: true })
       .limit(500);
@@ -67,7 +67,20 @@ Deno.serve(async (req) => {
       console.error("Consulta de perfis falhou", error.code);
       return respond({ mensagem: "Não foi possível carregar a campanha." }, 503, origin);
     }
-    return respond({ perfis: data ?? [] }, 200, origin);
+    // Somente perfis publicados recebem links temporários para as fotos.
+    // O bucket permanece privado, inclusive para os perfis ainda não publicados.
+    const perfis = await Promise.all((data ?? []).map(async (profile) => {
+      const { foto_storage_path, ...publicFields } = profile;
+      let foto_url: string | null = null;
+      if (foto_storage_path) {
+        const { data: signed, error: signingError } = await client.storage
+          .from("fotos-criancas-ame").createSignedUrl(foto_storage_path, 600);
+        if (signingError) console.error("Falha ao assinar foto", signingError.message);
+        foto_url = signed?.signedUrl ?? null;
+      }
+      return { ...publicFields, foto_url };
+    }));
+    return respond({ perfis }, 200, origin);
   }
 
   if (req.method !== "POST") return respond({ mensagem: "Método inválido." }, 405, origin);
