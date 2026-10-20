@@ -22,7 +22,8 @@ Sistema independente da campanha de apadrinhamento, hospedado pelo GitHub Pages 
 - [ ] Configurar Cloudflare Turnstile (chave pública no frontend e segredo exclusivamente no Supabase).
 - [ ] Homologar fluxo completo pelo navegador: login, cadastro, apadrinhamento, confirmação e liberação.
 - [ ] Acrescentar envio de e-mail institucional para novas solicitações e histórico das notificações.
-- [ ] Construir envio de fotos autorizado diretamente pelo painel (atualmente aceita somente URL HTTPS de imagem).
+- [x] Implantar envio de fotos diretamente pelo painel para um bucket PRIVADO no Supabase, com validação de tipo e limite de 4 MB.
+- [ ] Testar upload real com a conta administrativa e verificar exibição privada/publicação autorizada.
 - [ ] Aprovar aviso de privacidade, dados e fotografias; inserir somente perfis reais autorizados.
 - [ ] Incorporar a vitrine ao Wix e testar dispositivos móveis.
 
@@ -71,6 +72,7 @@ Antes de ligar:
 - `admin.html`: gestão protegida.
 - `js/config.js`: configuração **pública**.
 - `database/instalacao.sql`: estrutura inicial (já executada neste projeto; não reexecutar em outros bancos).
+- `database/fotos-privadas.sql`: migração do armazenamento privado (já aplicada; validação de caminho corrigida em migração adicional).
 - `supabase/functions/campanha-publica/index.ts`: API pública, Turnstile e reserva atômica.
 - `supabase/functions/campanha-admin/index.ts`: API protegida para gestão.
 - `supabase/config.toml`: declara verificação de JWT feita no próprio serviço.
@@ -81,5 +83,7 @@ Antes de ligar:
 - O GitHub é **público**. Não gravar dados pessoais, senhas, tokens ou chaves privilegiadas nele.
 - A chave de API **publicável** do Supabase no frontend não é segredo; segurança depende das regras RLS e das checagens de autorização no servidor.
 - A lista de interessados, seus contatos e os perfis não publicados não são acessíveis sem login de membro da equipe.
+- As fotos ficam no bucket privado `fotos-criancas-ame`; somente perfis publicados recebem URLs assinadas válidas por dez minutos.
+- Perfis em teste devem permanecer com `publicacao_autorizada=false` até a revisão e autorização da ONG.
 - Não incluir sobrenomes completos, endereços, instituições de ensino ou fotografias sem autorização apropriada.
 - A ONG precisa definir aviso de privacidade, conservação e exclusão de dados e colaboradores com acesso.
