@@ -39,6 +39,16 @@ jobs:
           else
             echo "::warning::Resposta inesperada na verificação: HTTP $status."
           fi
+      - name: Bloquear solicitação sem token Turnstile
+        shell: bash
+        run: |
+          status=$(curl -sS -o resposta-sem-captcha.json -w "%{http_code}" --max-time 20 \
+            -X POST -H "Origin: https://mateuscrlopes.github.io" \
+            -H "Content-Type: application/json" \
+            --data '{"acao":"solicitar","crianca_id":"00000000-0000-4000-8000-000000000000","nome":"Teste Automatico","telefone":"11999990000","email":"","autorizou_contato":true,"website":"","turnstile_token":""}' \
+            "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica")
+          echo "Envio sem Turnstile: HTTP $status (esperado 403)"
+          test "$status" = "403"
       - name: Garantir bloqueio da gestão sem login
         shell: bash
         run: |
