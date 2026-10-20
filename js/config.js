@@ -9,5 +9,5 @@ window.CAMPANHA_CONFIG = Object.freeze({
   supabaseUrl: 'https://wsixoeonopxejapfxjms.supabase.co',
   supabasePublishableKey: 'sb_publishable_wXhJrU-1STQJnHEmkQLZ_g_q-Fg6WEF', // chave PUBLICÁVEL (não é segredo)
   adminEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-admin',
-  turnstileSiteKey: null, // site key pública da Cloudflare; segredo fica no Supabase
+  turnstileSiteKey: '0x4AAAAAAFcQmJOTIKLHUCeB', // site key pública da Cloudflare; segredo fica no Supabase
 });
