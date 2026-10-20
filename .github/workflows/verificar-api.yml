@@ -25,6 +25,20 @@ jobs:
             "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica" \
             -o resposta.json
           jq -e '.perfis | type == "array"' resposta.json
+      - name: Verificar configuração do Turnstile sem enviar dados
+        shell: bash
+        run: |
+          status=$(curl -sS -o resposta-captcha.json -w "%{http_code}" --max-time 20 \
+            -X POST -H "Origin: https://mateuscrlopes.github.io" \
+            -H "Content-Type: text/plain" --data "verificacao-sem-dados" \
+            "https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica")
+          if [ "$status" = "415" ]; then
+            echo "Turnstile secret configurado no servidor."
+          elif [ "$status" = "503" ]; then
+            echo "::warning::Turnstile secret ainda não configurado no Supabase."
+          else
+            echo "::warning::Resposta inesperada na verificação: HTTP $status."
+          fi
       - name: Garantir bloqueio da gestão sem login
         shell: bash
         run: |
