@@ -23,7 +23,7 @@ Sistema independente da campanha de apadrinhamento, hospedado pelo GitHub Pages 
 - [ ] Homologar fluxo completo pelo navegador: login, cadastro, apadrinhamento, confirmação e liberação.
 - [x] Destinatário configurável e protegido no Supabase (o e-mail de teste não está no GitHub).
 - [x] Fila privada por solicitação e integração da função pública com o serviço de envio Resend.
-- [ ] Informar `RESEND_API_KEY` ao Supabase e validar recebimento do primeiro e-mail.
+- [ ] Validar o primeiro e-mail usando o botão **Enviar e-mail de teste** no painel da ONG. O segredo `RESEND_API_KEY` é configurado pelo usuário diretamente no Supabase e não pode ser lido pelo código público.
 - [ ] Configurar remetente em domínio verificado, tratar retenção de dados e escolher o destinatário oficial da ONG.
 - [ ] Testar falhas, reenvio de notificações pendentes e relatórios no painel antes da abertura pública.
 - [x] Implantar envio de fotos diretamente pelo painel para um bucket PRIVADO no Supabase, com validação de tipo e limite de 4 MB.
@@ -92,6 +92,14 @@ Antes de ligar:
 - Perfis em teste devem permanecer com `publicacao_autorizada=false` até a revisão e autorização da ONG.
 - Não incluir sobrenomes completos, endereços, instituições de ensino ou fotografias sem autorização apropriada.
 - A ONG precisa definir aviso de privacidade, conservação e exclusão de dados e colaboradores com acesso.
+
+## Testar o envio sem cadastrar um apadrinhamento
+
+1. Entre no [painel administrativo](https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html).
+2. Clique em **Enviar e-mail de teste** (somente administradores).
+3. O servidor verifica o papel administrativo, consulta o endereço na tabela privada e chama o Resend. A função responde apenas se o Resend aceitou o envio; **entrega na caixa postal deve ser confirmada pelo destinatário**.
+4. Só é permitida uma tentativa a cada dois minutos; essa limitação é registrada no banco e não no navegador.
+5. O teste não cria crianças, não publica perfis e não registra apadrinhamentos.
 
 ## E-mail de notificação (em preparação)
 
