@@ -5,6 +5,9 @@ on:
     paths:
       - ".github/workflows/verificar-api.yml"
       - "supabase/functions/**"
+      - "index.html"
+      - "admin.html"
+      - "js/**"
   workflow_dispatch:
 
 permissions:
@@ -36,3 +39,22 @@ jobs:
             "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js" \
             -o supabase.min.js
           test -s supabase.min.js
+
+      - name: Baixar arquivos do site
+        uses: actions/checkout@v4
+      - name: Verificar sintaxe dos scripts das páginas
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          for name in ('index.html', 'admin.html'):
+              source = Path(name).read_text(encoding='utf-8')
+              scripts = re.findall(r'<script(?![^>]*\bsrc\b)[^>]*>(.*?)</script>', source, flags=re.S|re.I)
+              if len(scripts)!=1:
+                  raise SystemExit(f'Esperado 1 script inline em {name}, encontrado {len(scripts)}')
+              Path('/tmp/'+name+'.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/index.html.js
+          node --check /tmp/admin.html.js
+          node --check js/config.js
