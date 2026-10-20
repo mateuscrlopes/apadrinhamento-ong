@@ -31,6 +31,7 @@ input[type="checkbox"]{display:inline-block;width:auto;margin:0 8px 0 0;accent-c
 dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radius:18px;padding:0;box-shadow:0 20px 65px #130c2240}dialog::backdrop{background:#20162aad}.modal{padding:25px}.modal-title{display:flex;justify-content:space-between;align-items:start;gap:10px}.close{border:0;background:#f1edf4;border-radius:50%;font-size:1.4rem;width:36px;height:36px;cursor:pointer}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.wide{grid-column:1/-1}
 .notice{margin-top:12px;color:#665477;background:#f2ecf8;padding:12px;border-radius:9px;font-size:.83rem}
+.photo-preview{display:block;max-width:160px;width:100%;height:140px;object-fit:cover;border-radius:12px;margin-top:10px;border:1px solid var(--line)}.profile-image{width:100%;height:150px;object-fit:cover;background:#eee7f3}.photo-preview[hidden]{display:none!important}
 @media(max-width:590px){h1{font-size:1.5rem}header{padding:14px 18px}.card{padding:18px}.fields{grid-template-columns:1fr}.wide{grid-column:auto}}
 </style>
 </head>
@@ -80,7 +81,7 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
       <label class="wide">Nome para exibição (autorizado)<input name="nome_exibicao" maxlength="80" placeholder="Nome autorizado ou Perfil 001"></label>
       <label>Tamanho da roupa<input name="tamanho_roupa" maxlength="20" required></label>
       <label>Tamanho do calçado<input name="tamanho_calcado" maxlength="20" required></label>
-      <label class="wide">Endereço HTTPS da foto autorizada (opcional)<input name="foto_url" type="url" placeholder="https://..."></label>
+      <label class="wide">Foto autorizada (JPG, PNG ou WebP — até 4 MB)<input name="foto_arquivo" type="file" accept="image/jpeg,image/png,image/webp"><small id="photo-help">A imagem ficará no armazenamento privado da ONG.</small><img id="photo-preview" alt="Foto atual do perfil" class="photo-preview" hidden></label>
       <label>Ordem na vitrine<input name="ordem" type="number" value="0"></label>
       <div></div>
       <label class="check wide"><input name="ativo" type="checkbox" checked>Perfil ativo</label>
@@ -105,6 +106,7 @@ const profilesEl=document.getElementById('profiles');
 const requestsEl=document.getElementById('requests');
 const loginForm=document.getElementById('login-form');
 let api=null,session=null,children=[],requests=[],editingId=null,role='operador';
+let previewUrl=null;
 const statusLabels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
 const requestLabels={em_contato:'Em contato',confirmado:'Confirmado',cancelado:'Cancelado'};
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);if(cls)el.className=cls;return el;};
@@ -115,6 +117,8 @@ function authorized(value){
   document.getElementById('logout').hidden=value;
 }
 async function apiCall(method,body){
+  const {data:authData}=await api.auth.getSession();
+  session=authData.session;
   if(!session?.access_token)throw Error('Sua sessão expirou. Entre novamente.');
   const response=await fetch(config.adminEndpoint,{
     method,
@@ -122,8 +126,31 @@ async function apiCall(method,body){
     body:body?JSON.stringify(body):undefined,credentials:'omit',cache:'no-store'
   });
   let data={};try{data=await response.json();}catch{}
-  if(!response.ok)throw Error(data.mensagem||'Não foi possível concluir esta operação.');
+  if(!response.ok){
+    const error=new Error(data.mensagem||'Não foi possível concluir esta operação.');
+    error.status=response.status;
+    throw error;
+  }
   return data;
+}
+async function uploadPhoto(profileId,file){
+  const {data:authData}=await api.auth.getSession();
+  session=authData.session;
+  if(!session?.access_token)throw Error('Sua sessão expirou. Entre novamente.');
+  const payload=new FormData();
+  payload.append('acao','enviar_foto');
+  payload.append('crianca_id',profileId);
+  payload.append('foto',file,file.name);
+  const response=await fetch(config.adminEndpoint,{
+    method:'POST',headers:{
+      'Authorization':'Bearer '+session.access_token,
+      'apikey':config.supabasePublishableKey
+    },body:payload,credentials:'omit',cache:'no-store'
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.sucesso!==true)
+    throw Error(result.mensagem||'Não foi possível enviar a fotografia.');
+  return result;
 }
 async function refresh(){
   message('Carregando informações...');
@@ -136,13 +163,28 @@ async function refresh(){
     document.getElementById('new-profile').hidden=role!=='administrador';
     render();
     message('');
-  }catch(error){message(error.message,true);}
+    return true;
+  }catch(error){
+    message(error.message,true);
+    if(error.status===401||error.status===403){
+      authorized(true);
+      document.getElementById('login-message').textContent=error.message;
+    }
+    return false;
+  }
 }
 function render(){
   profilesEl.replaceChildren();
   if(!children.length)profilesEl.appendChild(node('p','Nenhum perfil cadastrado. Use “Cadastrar perfil” para começar.','empty'));
   for(const p of children){
     const article=node('article',undefined,'profile');
+    if(p.foto_url){
+      const img=node('img',undefined,'profile-image');
+      img.src=p.foto_url;
+      img.alt='Fotografia autorizada deste perfil';
+      img.loading='lazy';
+      article.appendChild(img);
+    }
     const content=node('div',undefined,'profile-body');
     const head=node('div',undefined,'profile-head');
     head.append(node('h3',(p.nome_exibicao||'Perfil '+p.codigo)+' · '+p.codigo));
@@ -198,27 +240,66 @@ function openEditor(profile=null){
   document.getElementById('profile-modal-title').textContent=editingId?'Editar perfil':'Cadastrar perfil';
   const fields=profileForm.elements;
   if(profile){
-    for(const key of ['codigo','idade','nome_exibicao','tamanho_roupa','tamanho_calcado','foto_url','ordem'])
+    for(const key of ['codigo','idade','nome_exibicao','tamanho_roupa','tamanho_calcado','ordem'])
       fields.namedItem(key).value=profile[key]??'';
     fields.namedItem('ativo').checked=!!profile.ativo;
     fields.namedItem('publicacao_autorizada').checked=!!profile.publicacao_autorizada;
   }
+  const photoPreview=document.getElementById('photo-preview');
+  if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}
+  photoPreview.src=profile?.foto_url||'';
+  photoPreview.hidden=!profile?.foto_url;
   document.getElementById('profile-message').textContent='';
   dialog.showModal();
 }
+profileForm.elements.namedItem('foto_arquivo').addEventListener('change',()=>{
+  const file=profileForm.elements.namedItem('foto_arquivo').files?.[0];
+  const preview=document.getElementById('photo-preview');
+  if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}
+  if(file){
+    previewUrl=URL.createObjectURL(file);
+    preview.src=previewUrl;preview.hidden=false;
+  }else{preview.src='';preview.hidden=true;}
+});
+dialog.addEventListener('close',()=>{
+  if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}
+});
 profileForm.addEventListener('submit',async (e)=>{
   e.preventDefault();
   const button=document.getElementById('save-profile');button.disabled=true;
   const fields=profileForm.elements,profile={};
-  for(const key of ['codigo','nome_exibicao','tamanho_roupa','tamanho_calcado','foto_url'])
+  for(const key of ['codigo','nome_exibicao','tamanho_roupa','tamanho_calcado'])
     profile[key]=fields.namedItem(key).value.trim();
   profile.idade=Number(fields.namedItem('idade').value);
   profile.ordem=Number(fields.namedItem('ordem').value||0);
   profile.ativo=fields.namedItem('ativo').checked;
   profile.publicacao_autorizada=fields.namedItem('publicacao_autorizada').checked;
   const notice=document.getElementById('profile-message');
+  const file=fields.namedItem('foto_arquivo').files?.[0]??null;
+  if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>4194304)){
+    notice.textContent='Selecione uma foto JPG, PNG ou WebP de até 4 MB.';
+    button.disabled=false;
+    return;
+  }
+  if(profile.publicacao_autorizada &&
+     !confirm('Confirma que a ONG autorizou a divulgação deste perfil? Após salvar, os dados ficarão públicos na vitrine.')){
+    button.disabled=false;
+    return;
+  }
   try{
-    await apiCall('POST',{acao:'salvar_crianca',id:editingId,perfil:profile});
+    notice.textContent='Salvando dados do perfil...';
+    const saved=await apiCall('POST',{acao:'salvar_crianca',id:editingId,perfil:profile});
+    const id=saved.id||editingId;
+    editingId=id;
+    if(file){
+      notice.textContent='Perfil salvo. Enviando a foto com segurança...';
+      try{await uploadPhoto(id,file);}
+      catch(err){
+        notice.textContent='Perfil salvo, mas a foto não foi enviada: '+err.message+' Tente salvar novamente.';
+        await refresh();
+        return;
+      }
+    }
     dialog.close();await refresh();message('Perfil salvo com sucesso.');
   }catch(error){notice.textContent=error.message;}finally{button.disabled=false;}
 });
@@ -239,7 +320,10 @@ loginForm.addEventListener('submit',async(e)=>{
   try{
     const {data,error}=await api.auth.signInWithPassword({email,password});
     if(error)throw error;
-    session=data.session;authorized(false);await refresh();
+    session=data.session;
+    const allowed=await refresh();
+    authorized(!allowed);
+    if(!allowed)document.getElementById('login-message').textContent=msg.textContent;
   }catch(err){document.getElementById('login-message').textContent=err.message||'Não foi possível entrar.';}
   finally{btn.disabled=false;}
 });
@@ -253,7 +337,12 @@ async function start(){
   }
   api=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
   const {data,error}=await api.auth.getSession();
-  if(!error&&data.session){session=data.session;authorized(false);await refresh();}
+  if(!error&&data.session){
+    session=data.session;
+    const allowed=await refresh();
+    authorized(!allowed);
+    if(!allowed)document.getElementById('login-message').textContent=msg.textContent;
+  }
 }
 start();
 </script>
