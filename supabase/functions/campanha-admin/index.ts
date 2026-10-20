@@ -11,6 +11,9 @@ const admin = createClient(URL, KEY, { auth: { persistSession:false, autoRefresh
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUCKET = "fotos-criancas-ame";
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ??
+  "Campanha de Apadrinhamento <onboarding@resend.dev>";
 const cors=(origin:string|null)=>({
   "Access-Control-Allow-Origin":origin===SITE_ORIGIN?SITE_ORIGIN:SITE_ORIGIN,
   "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info",
@@ -144,6 +147,59 @@ Deno.serve(async(req)=>{
   try { body=await req.json(); if(!body||Array.isArray(body)||typeof body!=="object")throw Error(); }
   catch{return send({mensagem:"Dados inválidos."},400,origin);}
 
+  // Teste de envio restrito ao administrador; destinatário vem apenas do banco.
+  // Uma tentativa a cada dois minutos evita e-mails repetidos por engano.
+  if(body.acao==="enviar_email_teste"){
+    if(team.papel!=="administrador")
+      return send({mensagem:"Somente administradores podem testar e-mails."},403,origin);
+    if(!RESEND_API_KEY)
+      return send({mensagem:"RESEND_API_KEY ainda não está disponível no servidor."},503,origin);
+    const cutoff=new Date(Date.now()-120000).toISOString();
+    const {data:settings,error:settingsError}=await admin.from("configuracoes_email")
+      .update({ultimo_teste_em:new Date().toISOString()})
+      .eq("id",1).eq("habilitado",true)
+      .or("ultimo_teste_em.is.null,ultimo_teste_em.lt."+cutoff)
+      .select("destinatario").maybeSingle();
+    if(settingsError)return send({mensagem:"Não foi possível consultar a configuração de e-mail."},500,origin);
+    if(!settings)return send({mensagem:"Aguarde dois minutos para outro teste ou revise o destinatário configurado."},429,origin);
+    let response:Response;
+    try{
+      response=await fetch("https://api.resend.com/emails",{
+        method:"POST",
+        headers:{"Authorization":"Bearer "+RESEND_API_KEY,"Content-Type":"application/json"},
+        body:JSON.stringify({
+          from:RESEND_FROM_EMAIL,
+          to:[settings.destinatario],
+          subject:"Teste de notificações — Campanha de Apadrinhamento",
+          text:[
+            "Olá!",
+            "",
+            "Este é um e-mail de teste do sistema de apadrinhamento da ONG.",
+            "O serviço de notificações foi conectado ao endereço configurado.",
+            "",
+            "Nenhuma criança foi publicada e nenhuma solicitação de apadrinhamento foi criada para este teste.",
+            "",
+            "Painel administrativo:",
+            "https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html",
+            "",
+            "Mensagem automática de teste."
+          ].join("\n")
+        }),
+        signal:AbortSignal.timeout(10000)
+      });
+    }catch(error){
+      console.error("Erro na conexão com Resend",error instanceof Error?error.name:"Erro");
+      return send({mensagem:"Não foi possível conectar ao serviço de e-mail. Tente novamente em dois minutos."},502,origin);
+    }
+    if(!response.ok){
+      console.error("Resend rejeitou teste",response.status);
+      const explanation=response.status===403||response.status===422
+        ?"Confira se o destinatário corresponde à conta de teste do Resend e se o remetente está permitido."
+        :"Confira a chave RESEND_API_KEY e os limites de envio do Resend.";
+      return send({mensagem:"Resend retornou HTTP "+response.status+". "+explanation},502,origin);
+    }
+    return send({sucesso:true,mensagem:"O Resend aceitou o e-mail de teste. Confira sua caixa de entrada e spam."},200,origin);
+  }
   if(body.acao==="salvar_crianca"){
     if(team.papel!=="administrador")return send({mensagem:"Operação restrita à administração."},403,origin);
     const profile=validProfile(body.perfil);
