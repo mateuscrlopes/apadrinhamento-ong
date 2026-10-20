@@ -21,7 +21,11 @@ Sistema independente da campanha de apadrinhamento, hospedado pelo GitHub Pages 
 - [ ] Cadastrar primeiro usuário autorizado em Supabase Auth e autorizar seu acesso administrativo.
 - [ ] Configurar Cloudflare Turnstile (chave pública no frontend e segredo exclusivamente no Supabase).
 - [ ] Homologar fluxo completo pelo navegador: login, cadastro, apadrinhamento, confirmação e liberação.
-- [ ] Acrescentar envio de e-mail institucional para novas solicitações e histórico das notificações.
+- [x] Destinatário configurável e protegido no Supabase (o e-mail de teste não está no GitHub).
+- [x] Fila privada por solicitação e integração da função pública com o serviço de envio Resend.
+- [ ] Informar `RESEND_API_KEY` ao Supabase e validar recebimento do primeiro e-mail.
+- [ ] Configurar remetente em domínio verificado, tratar retenção de dados e escolher o destinatário oficial da ONG.
+- [ ] Testar falhas, reenvio de notificações pendentes e relatórios no painel antes da abertura pública.
 - [x] Implantar envio de fotos diretamente pelo painel para um bucket PRIVADO no Supabase, com validação de tipo e limite de 4 MB.
 - [ ] Testar upload real com a conta administrativa e verificar exibição privada/publicação autorizada.
 - [ ] Aprovar aviso de privacidade, dados e fotografias; inserir somente perfis reais autorizados.
@@ -73,6 +77,7 @@ Antes de ligar:
 - `js/config.js`: configuração **pública**.
 - `database/instalacao.sql`: estrutura inicial (já executada neste projeto; não reexecutar em outros bancos).
 - `database/fotos-privadas.sql`: migração do armazenamento privado (já aplicada; validação de caminho corrigida em migração adicional).
+- `database/notificacoes-email.sql`: fila e configuração privada de notificações.
 - `supabase/functions/campanha-publica/index.ts`: API pública, Turnstile e reserva atômica.
 - `supabase/functions/campanha-admin/index.ts`: API protegida para gestão.
 - `supabase/config.toml`: declara verificação de JWT feita no próprio serviço.
@@ -87,3 +92,20 @@ Antes de ligar:
 - Perfis em teste devem permanecer com `publicacao_autorizada=false` até a revisão e autorização da ONG.
 - Não incluir sobrenomes completos, endereços, instituições de ensino ou fotografias sem autorização apropriada.
 - A ONG precisa definir aviso de privacidade, conservação e exclusão de dados e colaboradores com acesso.
+
+## E-mail de notificação (em preparação)
+
+O endereço de destino foi salvo diretamente na tabela privada `public.configuracoes_email`, na linha de `id=1`. **Não divulgar esse endereço no GitHub.** Para trocá-lo na fase de operação, editar o campo `destinatario` no SQL Editor do projeto institucional, com autorização da ONG.
+
+Toda nova solicitação cria automaticamente uma linha na tabela privada `public.notificacoes_email`. A função `campanha-publica` só tenta entregar quando houver uma chave `RESEND_API_KEY` configurada nas Edge Function Secrets. Sem chave, o aviso fica `pendente`; falha de envio não cancela a reserva.
+
+Configuração para o primeiro teste:
+
+1. Criar uma conta em https://resend.com com o mesmo endereço de e-mail usado como destinatário de teste.
+2. Criar chave em https://resend.com/api-keys com permissão de envio.
+3. No [Supabase institucional](https://supabase.com/dashboard/project/wsixoeonopxejapfxjms/settings/functions), salvar `RESEND_API_KEY` em **Edge Functions → Secrets**. **Não enviar a chave pelo chat ou GitHub.**
+4. Para o ambiente de testes, o remetente padrão é `Campanha de Apadrinhamento <onboarding@resend.dev>`. Ele só entrega para o e-mail que é proprietário da conta Resend. Se for necessário enviar para outro endereço, é obrigatório verificar um domínio no Resend.
+5. Depois de testar o recebimento, configurar `RESEND_FROM_EMAIL` com endereço de domínio de remetente verificado e trocar o destinatário pelo endereço oficial da ONG.
+6. Não ativar o envio de dados de menores reais antes de aprovação da ONG e do aviso de privacidade. O e-mail deve ser acessado apenas por colaborador autorizado.
+
+**Importante:** a solicitação de apadrinhamento é salva mesmo que o serviço de e-mail falhe. A situação do envio fica registrada em `notificacoes_email`. O reenvio manual de pendências ainda precisa ser implementado/homologado.
