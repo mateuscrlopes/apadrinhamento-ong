@@ -9,6 +9,11 @@ const ADMIN_ORIGIN = SITE_ORIGIN;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const TURNSTILE_SECRET = Deno.env.get("CLOUDFLARE_TURNSTILE_SECRET_KEY") ?? "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+// onboarding@resend.dev serve apenas para testes, e somente no e-mail da conta Resend.
+// Em produção configurar RESEND_FROM_EMAIL com domínio remetente verificado.
+const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ??
+  "Campanha de Apadrinhamento <onboarding@resend.dev>";
 const client = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
@@ -44,6 +49,98 @@ async function validateTurnstile(token: string) {
   return outcome.success === true
     && outcome.hostname === "mateuscrlopes.github.io"
     && outcome.action === "apadrinhar";
+}
+
+
+/**
+ * Envia uma notificação somente após a reserva ter sido gravada no banco.
+ * A fila foi criada atomicamente no INSERT da solicitação. O envio não
+ * interfere no sucesso da reserva; falhas permanecem registradas para suporte.
+ * Nunca inclui endereço de e-mail nem chaves de API no código público.
+ */
+async function notifyNewRequest(requestId: string): Promise<void> {
+  if (!RESEND_API_KEY) {
+    console.info("E-mail pendente: serviço de envio ainda não configurado.");
+    return;
+  }
+  let attempted = false;
+  try {
+    const [settings, pending, request] = await Promise.all([
+      client.from("configuracoes_email").select("destinatario,habilitado").eq("id",1).maybeSingle(),
+      client.from("notificacoes_email").select("solicitacao_id,situacao,tentativas")
+        .eq("solicitacao_id",requestId).maybeSingle(),
+      client.from("solicitacoes")
+        .select("id,nome_padrinho,telefone,email,crianca_id")
+        .eq("id",requestId).maybeSingle(),
+    ]);
+    if (settings.error || pending.error || request.error) {
+      console.error("Consulta de notificação falhou.");
+      return;
+    }
+    if (!settings.data?.habilitado || !settings.data?.destinatario ||
+        !pending.data || pending.data.situacao==="enviada" || !request.data) return;
+
+    const {data:profile,error:profileError}=await client.from("criancas")
+      .select("codigo,nome_exibicao").eq("id",request.data.crianca_id).maybeSingle();
+    if (profileError || !profile) {
+      console.error("Perfil da notificação não localizado.");
+      return;
+    }
+
+    const details=[
+      "Um novo interesse de apadrinhamento foi registrado na campanha da ONG.",
+      "",
+      "Perfil: "+(profile.nome_exibicao ? profile.nome_exibicao+" · " : "")+profile.codigo,
+      "Interessado: "+request.data.nome_padrinho,
+      "WhatsApp: "+request.data.telefone,
+      "E-mail do interessado: "+(request.data.email||"Não informado"),
+      "",
+      "Abra o painel para acompanhar e confirmar o apadrinhamento:",
+      "https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html",
+      "",
+      "Mensagem automática da Campanha de Apadrinhamento."
+    ].join("\n");
+
+    attempted=true;
+    const response=await fetch("https://api.resend.com/emails", {
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer "+RESEND_API_KEY,
+        "Content-Type":"application/json",
+        "Idempotency-Key":"ame-solicitacao-"+requestId,
+      },
+      body:JSON.stringify({
+        from:RESEND_FROM_EMAIL,
+        to:[settings.data.destinatario],
+        subject:"Novo interesse de apadrinhamento — perfil "+profile.codigo,
+        text:details,
+      }),
+      signal:AbortSignal.timeout(10000),
+    });
+    if (!response.ok) {
+      const status=response.status;
+      console.error("Serviço de e-mail retornou HTTP "+status);
+      await client.from("notificacoes_email")
+        .update({situacao:"falha",tentativas:pending.data.tentativas+1,
+          ultimo_erro:"RESEND_HTTP_"+status,atualizada_em:new Date().toISOString()})
+        .eq("solicitacao_id",requestId);
+      return;
+    }
+    const responseBody=await response.json();
+    await client.from("notificacoes_email")
+      .update({situacao:"enviada",tentativas:pending.data.tentativas+1,
+        ultimo_erro:null,
+        mensagem_provedor_id:typeof responseBody?.id==="string"?responseBody.id:null,
+        atualizada_em:new Date().toISOString(),enviada_em:new Date().toISOString()})
+      .eq("solicitacao_id",requestId);
+    console.info("Notificação aceita pelo provedor de e-mail.");
+  } catch (error) {
+    console.error("Falha ao enviar notificação:",error instanceof Error?error.name:"erro");
+    if (attempted) await client.from("notificacoes_email")
+      .update({situacao:"falha",ultimo_erro:"FALHA_DE_CONEXAO",
+        atualizada_em:new Date().toISOString()})
+      .eq("solicitacao_id",requestId);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -116,7 +213,7 @@ Deno.serve(async (req) => {
       return respond({ mensagem: "Não foi possível validar a proteção do formulário. Tente novamente." }, 403, origin);
     }
 
-    const { error } = await client.rpc("registrar_interesse", {
+    const { data: requestId, error } = await client.rpc("registrar_interesse", {
       p_crianca_id: id, p_nome: nome, p_telefone: telefone,
       p_email: email, p_autorizou_contato: true,
     });
@@ -131,6 +228,7 @@ Deno.serve(async (req) => {
       console.error("Falha ao registrar interesse", error.code);
       return respond({ mensagem: "Não conseguimos concluir a solicitação. Tente novamente." }, 500, origin);
     }
+    if (typeof requestId==="string") await notifyNewRequest(requestId);
     return respond({ sucesso: true, mensagem: "Interesse registrado com sucesso." }, 201, origin);
   } catch (error) {
     console.error("Falha no processamento", error instanceof Error ? error.name : "unknown");
