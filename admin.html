@@ -55,7 +55,10 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
   <section id="dashboard" hidden>
     <div class="top">
       <div><h1>Gestão dos apadrinhamentos</h1><p class="muted" id="welcome"></p></div>
-      <button type="button" id="new-profile" class="btn">+ Cadastrar perfil</button>
+      <div class="card-actions">
+        <button type="button" id="test-email" class="btn secondary" hidden>Enviar e-mail de teste</button>
+        <button type="button" id="new-profile" class="btn">+ Cadastrar perfil</button>
+      </div>
     </div>
     <p class="message" id="dashboard-message" role="status" aria-live="polite"></p>
     <nav class="tabs" aria-label="Seções">
@@ -161,6 +164,7 @@ async function refresh(){
     role=data.papel||'operador';
     document.getElementById('welcome').textContent='Acompanhe os perfis e interesses recebidos.';
     document.getElementById('new-profile').hidden=role!=='administrador';
+    document.getElementById('test-email').hidden=role!=='administrador';
     render();
     message('');
     return true;
@@ -305,6 +309,22 @@ profileForm.addEventListener('submit',async (e)=>{
 });
 document.getElementById('close-modal').addEventListener('click',()=>dialog.close());
 document.getElementById('new-profile').addEventListener('click',()=>openEditor());
+document.getElementById('test-email').addEventListener('click',async()=>{
+  const button=document.getElementById('test-email');
+  button.disabled=true;
+  button.textContent='Enviando teste...';
+  message('Solicitando envio do e-mail de teste...');
+  try{
+    const result=await apiCall('POST',{acao:'enviar_email_teste'});
+    message(result.mensagem||'O serviço aceitou o envio. Confira seu e-mail.');
+  }catch(error){
+    message(error.message||'O e-mail não pôde ser enviado.',true);
+  }finally{
+    button.disabled=false;
+    button.textContent='Enviar e-mail de teste';
+  }
+});
+
 document.querySelectorAll('[data-tab]').forEach((button)=>{
   button.addEventListener('click',()=>{
     const tab=button.dataset.tab;
