@@ -5,7 +5,7 @@ window.CAMPANHA_CONFIG = Object.freeze({
   projectId: 'wsixoeonopxejapfxjms',
   publicEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-publica',
   publicEndpointEnabled: true, // lista somente perfis autorizados da API
-  submissionsEnabled: false, // liberar após configurar Turnstile e testar envios
+  submissionsEnabled: true, // formulário disponível somente para perfis publicados; em homologação
   supabaseUrl: 'https://wsixoeonopxejapfxjms.supabase.co',
   supabasePublishableKey: 'sb_publishable_wXhJrU-1STQJnHEmkQLZ_g_q-Fg6WEF', // chave PUBLICÁVEL (não é segredo)
   adminEndpoint: 'https://wsixoeonopxejapfxjms.supabase.co/functions/v1/campanha-admin',
