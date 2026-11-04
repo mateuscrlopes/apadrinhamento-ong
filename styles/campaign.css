@@ -155,3 +155,50 @@ dialog { border-radius: 20px; background: var(--paper); width: min(94vw,475px); 
   .ribbon-segment .icon { width: 16px; height: 16px; }
   .step-illustration { width: 40px; height: 65px; padding-block: 9px; }
 }
+
+/* Direção cromática: o roxo do logotipo é a cor dominante da AME. */
+:root {
+  --plum: #8135da;
+  --plum-deep: #27124c;
+  --purple: #8d42f1;
+  --pink: #c7a4ff;
+  --coral: #a578e7;
+  --rose: #e2d2fa;
+}
+.nav-links .nav-action { background:#c8a3ff; }
+.hero h1 em { color:#c5a3ff; }
+.hero-actions .hero-primary { background:#c6a0ff; color:#291348; }
+.eyebrow { color:#ceaeff; }
+.ribbon { background:#bf97f7; }
+.section-kicker { color:#7a47b6; }
+.how-head h2 em { color:#7943c5; }
+.heading h2 em { color:#7d46ca; }
+.step:nth-child(2) { background:#f1e7ff; }
+.step:nth-child(3) { background:#ebe2fa; }
+.step:nth-child(4) { background:#e7e0f3; }
+.step-illustration, .step:nth-child(4) .step-illustration { color:#8052be; }
+.gift-box { background:#9861df; box-shadow:inset -25px 0 #7b49c2; }
+.gift-lid { background:#b38aef; box-shadow:inset -26px 0 #9365d9; }
+.gift-heart { color:#5b2da1; }
+.photo { height:307px; background:linear-gradient(145deg,#f0e6ff,#d9c1fa); }
+.photo::before { content:''; position:absolute; z-index:0; width:262px; height:262px; border-radius:50%; background:#fffdfb; box-shadow:0 12px 35px #48256824; }
+.photo .profile-photo { width:240px; height:240px; object-fit:contain; object-position:center; position:relative; z-index:1; border-radius:50%; }
+.photo > svg:not(.icon) { position:relative; z-index:1; width:130px; height:130px; }
+.info h3 { color:#4d237f; }
+.note { background:#ece3fa; }
+.note-icon { color:#8151c0; }
+.closing { background:#e8dff8; }
+.closing h2 { color:#372055; }
+.closing h2 em { color:#7440b9; }
+.closing .section-kicker { color:#784da7; }
+.closing a { background:#622eab; }
+@media (max-width:800px) {
+  .photo { height:280px; }
+  .photo::before { width:230px; height:230px; }
+  .photo .profile-photo { width:211px; height:211px; }
+}
+@media (max-width:560px) {
+  .photo { height:292px; }
+  .photo::before { width:248px; height:248px; }
+  .photo .profile-photo { width:228px; height:228px; }
+}

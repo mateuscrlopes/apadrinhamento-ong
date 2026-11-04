@@ -46,3 +46,8 @@ header { background:var(--dark); }
 .metric-highlight strong { color:#6c32bb; }
 .login-symbol { background:#efe3ff; color:var(--primary); }
 @media(max-width:640px) { .ame-admin-logo { width:42px; height:42px; }.brand strong { font-size:17px; } }
+.section-kicker { color:#7850af; }
+h1 em,.login h1 em { color:#8545d0; }
+.login-symbol { background:#ebddff; color:#803cd4; }
+.metric-highlight { background:#e5d7fb; border-color:#e5d7fb; }
+.metric-highlight strong { color:#6430ad; }

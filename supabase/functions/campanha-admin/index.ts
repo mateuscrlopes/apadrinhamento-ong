@@ -33,7 +33,8 @@ function validProfile(input:unknown) {
   const p=input as Record<string,unknown>;
   const codigo=str(p.codigo,30),nome=optional(p.nome_exibicao,80);
   const idade=p.idade,roupa=str(p.tamanho_roupa,20),calcado=str(p.tamanho_calcado,20);
-  // Fotos são enviadas exclusivamente pelo armazenamento privado da ONG.
+  // Fotos enviadas pelo painel usam armazenamento privado. As fotos públicas
+  // já importadas são preservadas quando a equipe altera os demais campos.
   const publicado=p.publicacao_autorizada,ativo=p.ativo;
   const ordem=p.ordem;
   if(!codigo||codigo.length<2||!Number.isInteger(idade)||Number(idade)<0||Number(idade)>17
@@ -42,7 +43,7 @@ function validProfile(input:unknown) {
     ||(p.nome_exibicao!=null&&nome===null))return null;
   return {
     codigo,nome_exibicao:nome,idade:Number(idade),tamanho_roupa:roupa,
-    tamanho_calcado:calcado,foto_url:null,
+    tamanho_calcado:calcado,
     publicacao_autorizada:publicado,ativo,ordem:Number(ordem),
     atualizado_em:new Date().toISOString(),
   };
@@ -62,17 +63,20 @@ Deno.serve(async(req)=>{
 
   if(req.method==="GET") {
     const [children,requests]=await Promise.all([
-      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,ativo,publicacao_autorizada,ordem,situacao").order("ordem",{ascending:true}).order("codigo").limit(500),
+      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,foto_url,ativo,publicacao_autorizada,ordem,situacao").order("ordem",{ascending:true}).order("codigo").limit(500),
       admin.from("solicitacoes").select("id,crianca_id,nome_padrinho,telefone,email,situacao,criada_em,atualizada_em").order("criada_em",{ascending:false}).limit(1000)
     ]);
     if(children.error||requests.error)return send({mensagem:"Não foi possível carregar a gestão."},500,origin);
     // Links temporários somente após autenticação e verificação de membro ativo.
     const perfis = await Promise.all((children.data??[]).map(async(child)=>{
-      const {foto_storage_path,...fields}=child;
+      const {foto_storage_path,foto_url:storedPhotoUrl,...fields}=child;
       let foto_url: string | null = null;
       if(foto_storage_path){
         const {data:signed}=await admin.storage.from(BUCKET).createSignedUrl(foto_storage_path,600);
         foto_url=signed?.signedUrl??null;
+      } else if(typeof storedPhotoUrl==="string" &&
+        /^https:\/\/mateuscrlopes\.github\.io\/apadrinhamento-ong\/assets\/perfis\/natal26-\d{2}\.webp$/.test(storedPhotoUrl)) {
+        foto_url=storedPhotoUrl;
       }
       return {...fields,foto_url};
     }));
