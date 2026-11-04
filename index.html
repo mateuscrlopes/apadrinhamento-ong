@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#7149a5">
-  <meta name="description" content="Conheça a campanha de apadrinhamento da ONG e acompanhe os perfis disponíveis.">
-  <title>Campanha de Apadrinhamento</title>
+  <meta name="theme-color" content="#321c3c">
+  <meta name="description" content="Natal de Afeto 2026 — conheça os perfis disponíveis e manifeste seu interesse em apadrinhar uma criança na campanha da AME.">
+  <title>Natal de Afeto 2026 | AME</title>
   <style>
     :root{--purple:#7149a5;--purple-dark:#452577;--rose:#e2a7c4;--ink:#2c2336;--muted:#655e6d;--border:#e9e1ee;--surface:#fff;--bg:#faf7fc;--radius:20px}
     *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -54,25 +54,58 @@
     @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.heading{align-items:start;flex-direction:column}.hero-art{width:130px;height:130px}.hero-art svg{width:72px;height:72px}}
     @media(max-width:540px){.wrap{padding:0 16px}.hero{padding:42px 0}.hero-art{display:none}.grid{grid-template-columns:1fr;gap:15px}main{padding:30px 0}.photo{height:195px}.filters{gap:7px}.filter{padding:8px 12px;font-size:.82rem}.count{width:100%;margin:0}.stat{flex:1} .modal-body{padding:20px}}
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,20,1;9..144,700,20,1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/campaign.css">
 </head>
 <body>
-  <header class="hero">
+  <nav class="site-nav" aria-label="Navegação da campanha">
+    <div class="wrap nav-inner">
+      <a class="brand-link" href="#inicio" aria-label="AME — início da campanha"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-wordmark">ame<span class="brand-dot">.</span></span><span class="brand-caption">Natal de Afeto<br>2026</span></a>
+      <div class="nav-links"><a href="#como-funciona">Como funciona</a><a href="#perfis">Os perfis</a><a class="nav-action" href="#perfis">Quero participar <span aria-hidden="true">↗</span></a></div>
+    </div>
+  </nav>
+  <header class="hero" id="inicio">
     <div class="wrap hero-inner">
       <div class="hero-copy">
-        <span class="eyebrow">♡ Campanha solidária</span>
-        <h1>Pequenos gestos.<br>Grandes histórias.</h1>
-        <p>Conheça a campanha de apadrinhamento. Com cuidado e solidariedade, cada gesto pode fazer a diferença na vida de uma criança.</p>
-        <a href="#perfis">Conhecer os perfis ↓</a>
+        <span class="eyebrow"><span class="eyebrow-star" aria-hidden="true">✳</span> Campanha de Natal 2026 · AME</span>
+        <h1>O melhor do Natal <em>é o que a gente compartilha.</em></h1>
+        <p>Um gesto de carinho pode transformar este fim de ano. Conheça as crianças que participam da nossa campanha e faça parte de um Natal cheio de afeto.</p>
+        <div class="hero-actions"><a class="hero-primary" href="#perfis">Quero apadrinhar <span aria-hidden="true">↗</span></a><a class="hero-secondary" href="#como-funciona">Entenda a campanha <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-caption"><span class="sparkle" aria-hidden="true">✦</span> Pequenos gestos. Memórias que ficam.</div>
       </div>
-      <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 82 15 49C-8 23 28-5 50 29 72-5 108 23 85 49L50 82Z"/><path d="M50 63 30 45M50 63 71 43"/></svg></div>
+      <div class="hero-scene" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <span class="scene-star star-one">✳</span><span class="scene-star star-two">✦</span><span class="scene-star star-three">✳</span>
+        <div class="scene-sticker sticker-top">presentear é<br><strong>estar presente.</strong></div>
+        <div class="gift"><div class="gift-lid"></div><div class="gift-box"></div><div class="gift-ribbon-vertical"></div><div class="gift-ribbon-horizontal"></div><div class="gift-bow bow-left"></div><div class="gift-bow bow-right"></div><div class="gift-heart">♥</div></div>
+        <div class="scene-sticker sticker-bottom"><span>♡</span> Natal com propósito<br><strong>AME · 2026</strong></div>
+      </div>
     </div>
   </header>
 
-  <main class="wrap" id="perfis">
+  <div class="ribbon" aria-label="Natal de afeto — juntos fazemos a diferença"><div class="ribbon-track" aria-hidden="true"><span>NATAL DE AFETO <b>✳</b> JUNTOS FAZEMOS A DIFERENÇA <b>✳</b> NATAL DE AFETO <b>✳</b> JUNTOS FAZEMOS A DIFERENÇA <b>✳</b></span><span>NATAL DE AFETO <b>✳</b> JUNTOS FAZEMOS A DIFERENÇA <b>✳</b> NATAL DE AFETO <b>✳</b> JUNTOS FAZEMOS A DIFERENÇA <b>✳</b></span></div></div>
+
+  <section class="how-section" id="como-funciona" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="how-head"><div><span class="section-kicker">01 / SOBRE A CAMPANHA</span><h2 id="how-title">O caminho até <em>um Natal especial.</em></h2></div><p>Participar é simples. A ONG acompanha cada pedido de perto para que o seu gesto chegue a quem você escolheu apadrinhar.</p></div>
+      <div class="steps">
+        <article class="step"><span class="step-num">01</span><span class="step-illustration" aria-hidden="true">✦</span><h3>Conheça</h3><p>Explore os perfis das crianças participantes da campanha.</p></article>
+        <article class="step"><span class="step-num">02</span><span class="step-illustration" aria-hidden="true">♡</span><h3>Escolha</h3><p>Selecione um perfil disponível que você deseja apadrinhar.</p></article>
+        <article class="step"><span class="step-num">03</span><span class="step-illustration" aria-hidden="true">↗</span><h3>Cadastre</h3><p>Deixe seu nome e WhatsApp para receber nossas orientações.</p></article>
+        <article class="step"><span class="step-num">04</span><span class="step-illustration" aria-hidden="true">♥</span><h3>Compartilhe</h3><p>Aguarde o contato da ONG para confirmar o apadrinhamento.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <main class="gallery-section" id="perfis">
+    <div class="wrap">
+    <span class="section-kicker">02 / FAÇA PARTE</span>
     <div class="heading">
       <div>
-        <h2>Encontre um perfil para apadrinhar</h2>
-        <p class="subtitle">Escolha um perfil disponível e manifeste seu interesse. Nossa equipe entrará em contato para orientar os próximos passos.</p>
+        <h2>Um encontro pode começar <em>por aqui.</em></h2>
+        <p class="subtitle">Conheça os perfis participantes. Ao escolher uma criança, você manifesta seu interesse — nossa equipe entra em contato para combinar os próximos passos.</p>
       </div>
       <div class="stats" id="stats" aria-label="Resumo dos perfis" hidden>
         <div class="stat"><strong id="total">0</strong><span>Perfis</span></div>
@@ -89,9 +122,11 @@
     </nav>
     <div id="status-area" class="empty" role="status" aria-live="polite">Estamos organizando os perfis para a campanha de apadrinhamento.</div>
     <div class="grid" id="cards" aria-live="polite"></div>
-    <div class="note"><strong>Um compromisso com o cuidado:</strong> as informações e fotografias são apresentadas apenas quando autorizadas pela ONG, respeitando a privacidade das crianças.</div>
+    <div class="note"><span class="note-icon" aria-hidden="true">♡</span><div><strong>Um compromisso com o cuidado.</strong><span> As informações e fotografias são apresentadas apenas quando autorizadas pela ONG, respeitando a privacidade das crianças. O formulário registra interesse; a confirmação é feita pela nossa equipe.</span></div></div>
+    </div>
   </main>
-  <footer class="wrap">Campanha de Apadrinhamento · Solidariedade que transforma</footer>
+  <section class="closing"><div class="wrap closing-inner"><div><span class="section-kicker">ESPERAMOS POR VOCÊ</span><h2>Seu carinho pode fazer <em>parte dessa história.</em></h2></div><a href="#perfis">Escolher um perfil <span aria-hidden="true">↗</span></a></div><span class="closing-star" aria-hidden="true">✳</span></section>
+  <footer><div class="wrap footer-inner"><div class="footer-brand"><span class="brand-symbol" aria-hidden="true">✳</span><strong>ame<span>.</span></strong><small>Educação, cuidado e afeto.</small></div><p>Campanha Natal de Afeto 2026<br><span>Construindo memórias, juntos.</span></p></div></footer>
 
   <dialog id="interest" aria-labelledby="dialog-title">
     <form class="modal-body" id="form-interest">
@@ -100,14 +135,12 @@
         <button type="button" class="close" id="close-dialog" aria-label="Fechar">×</button>
       </div>
       <p id="chosen-profile"></p>
+      <p class="modal-instruction">Deixe seus dados para que nossa equipe converse com você sobre os próximos passos. É rapidinho!</p>
       <label class="field">Nome completo
         <input id="field-name" name="nome" type="text" maxlength="120" autocomplete="name" required>
       </label>
       <label class="field">WhatsApp com DDD
         <input id="field-phone" name="telefone" type="tel" maxlength="22" autocomplete="tel" placeholder="(00) 00000-0000" required>
-      </label>
-      <label class="field">E-mail (opcional)
-        <input id="field-email" name="email" type="email" maxlength="180" autocomplete="email">
       </label>
       <label class="consent">
         <input id="field-consent" type="checkbox" required>
@@ -116,7 +149,7 @@
       <input type="text" id="field-trap" name="website" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div id="turnstile-container" class="captcha" aria-label="Verificação de segurança"></div>
       <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
-      <button class="cta" type="submit" id="submit-interest">Enviar interesse</button>
+      <button class="cta" type="submit" id="submit-interest">Registrar meu interesse <span aria-hidden="true">↗</span></button>
     </form>
   </dialog>
   <script src="./js/config.js"></script>
@@ -269,7 +302,7 @@
       if(!selectedProfile || !endpoint || config.submissionsEnabled!==true || !form.reportValidity())return;
       const nome=document.getElementById('field-name').value.trim();
       const telefone=document.getElementById('field-phone').value.trim();
-      const email=document.getElementById('field-email').value.trim();
+      const email='';
       if(!captchaToken){formMessage.textContent='Conclua a verificação de segurança antes de enviar.';return;}
       if(nome.length<3 || telefone.replace(/\D/g,'').length<10 || !document.getElementById('field-consent').checked){
         formMessage.textContent='Confira seu nome, telefone e a autorização de contato.';

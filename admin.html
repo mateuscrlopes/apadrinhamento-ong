@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#624393">
-<title>Gestão de Apadrinhamentos | ONG</title>
+<meta name="theme-color" content="#321c3c">
+<title>Painel da Campanha | AME</title>
 <style>
 :root{--primary:#69449b;--dark:#39254f;--ink:#31283b;--muted:#706979;--bg:#faf8fc;--line:#e7dfec;--green:#267449;--red:#a43c42}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -34,16 +34,22 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
 .photo-preview{display:block;max-width:160px;width:100%;height:140px;object-fit:cover;border-radius:12px;margin-top:10px;border:1px solid var(--line)}.profile-image{width:100%;height:150px;object-fit:cover;background:#eee7f3}.photo-preview[hidden]{display:none!important}
 @media(max-width:590px){h1{font-size:1.5rem}header{padding:14px 18px}.card{padding:18px}.fields{grid-template-columns:1fr}.wide{grid-column:auto}}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles/admin.css">
 </head>
 <body>
 <header>
-  <div class="brand">Campanha de Apadrinhamento <span>Área administrativa da ONG</span></div>
-  <button type="button" class="btn ghost tiny" id="logout" hidden>Sair</button>
+  <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><div><strong>ame<span class="brand-dot">.</span></strong><span>Painel da campanha · Natal 2026</span></div></div>
+  <div class="header-right"><span class="private-label">ÁREA RESTRITA</span><button type="button" class="btn ghost tiny" id="logout" hidden>Sair <span aria-hidden="true">↗</span></button></div>
 </header>
 <main>
   <section id="login-section" class="card login">
-    <h1>Acessar gestão</h1>
-    <p class="muted">Entre com sua conta autorizada pela ONG para gerenciar perfis e solicitações.</p>
+    <div class="login-symbol" aria-hidden="true">♡</div>
+    <p class="section-kicker">ACESSO DA EQUIPE</p>
+    <h1>Bem-vindo ao <em>painel da campanha.</em></h1>
+    <p class="muted">Um lugar para acompanhar cada gesto de carinho. Entre com a conta autorizada pela ONG.</p>
     <form id="login-form">
       <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
@@ -54,19 +60,27 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
   </section>
   <section id="dashboard" hidden>
     <div class="top">
-      <div><h1>Gestão dos apadrinhamentos</h1><p class="muted" id="welcome"></p></div>
+      <div><span class="section-kicker">VISÃO GERAL / NATAL 2026</span><h1>Um Natal feito <em>por muitas mãos.</em></h1><p class="muted" id="welcome"></p></div>
       <div class="card-actions">
         <button type="button" id="test-email" class="btn secondary" hidden>Enviar e-mail de teste</button>
         <button type="button" id="new-profile" class="btn">+ Cadastrar perfil</button>
       </div>
     </div>
+    <div class="metrics" aria-label="Indicadores da campanha">
+      <div class="metric"><span>Perfis cadastrados</span><strong id="metric-total">—</strong><small>Na campanha</small></div>
+      <div class="metric"><span>Disponíveis</span><strong id="metric-available">—</strong><small>Aguardando padrinho</small></div>
+      <div class="metric metric-highlight"><span>Novos interesses</span><strong id="metric-pending">—</strong><small>Precisam de acompanhamento</small></div>
+      <div class="metric"><span>Confirmados</span><strong id="metric-confirmed">—</strong><small>Apadrinhamentos</small></div>
+    </div>
     <p class="message" id="dashboard-message" role="status" aria-live="polite"></p>
     <nav class="tabs" aria-label="Seções">
-      <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="true">Perfis das crianças</button>
-      <button class="tab" id="requests-tab" type="button" data-tab="requests" aria-selected="false">Solicitações</button>
+      <button class="tab" id="requests-tab" type="button" data-tab="requests" aria-selected="true">Interesses recebidos</button>
+      <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="false">Perfis das crianças</button>
     </nav>
-    <section id="profiles-panel"><div id="profiles" class="grid"></div></section>
-    <section id="requests-panel" hidden><div class="card table-scroll"><table class="table">
+    <section id="profiles-panel" hidden><div class="panel-title"><div><h2>Perfis da campanha</h2><p class="muted">Cadastre, atualize e acompanhe a disponibilidade.</p></div></div><div id="profiles" class="grid"></div></section>
+    <section id="requests-panel"><div class="panel-title"><div><h2>Quem quer fazer parte</h2><p class="muted">Acompanhe os contatos e confirme os apadrinhamentos após conversar com os interessados.</p></div><button class="btn ghost" id="export-requests" type="button">Exportar CSV ↓</button></div>
+      <div class="request-tools"><label class="search-label">Buscar nome, telefone ou perfil<input type="search" id="request-search" placeholder="Buscar interessado ou criança..."></label><label class="status-filter-label">Situação<select id="request-status-filter"><option value="todos">Todas as situações</option><option value="em_contato">Em contato</option><option value="confirmado">Confirmado</option><option value="cancelado">Cancelado</option></select></label></div>
+      <div class="card table-scroll"><table class="table">
       <thead><tr><th>Perfil</th><th>Interessado</th><th>WhatsApp</th><th>E-mail</th><th>Situação</th><th>Data</th><th>Ações</th></tr></thead>
       <tbody id="requests"></tbody>
     </table><p class="empty" id="requests-empty" hidden>Nenhuma solicitação registrada.</p></div></section>
@@ -178,6 +192,10 @@ async function refresh(){
   }
 }
 function render(){
+  document.getElementById('metric-total').textContent=children.length;
+  document.getElementById('metric-available').textContent=children.filter(p=>p.situacao==='disponivel'&&p.ativo).length;
+  document.getElementById('metric-pending').textContent=requests.filter(r=>r.situacao==='em_contato').length;
+  document.getElementById('metric-confirmed').textContent=requests.filter(r=>r.situacao==='confirmado').length;
   profilesEl.replaceChildren();
   if(!children.length)profilesEl.appendChild(node('p','Nenhum perfil cadastrado. Use “Cadastrar perfil” para começar.','empty'));
   for(const p of children){
@@ -207,15 +225,30 @@ function render(){
     profilesEl.appendChild(article);
   }
   requestsEl.replaceChildren();
-  document.getElementById('requests-empty').hidden=requests.length>0;
+  const term=document.getElementById('request-search').value.trim().toLocaleLowerCase('pt-BR');
+  const filter=document.getElementById('request-status-filter').value;
   const mapping=new Map(children.map(c=>[c.id,c]));
-  for(const r of requests){
+  const visibleRequests=requests.filter(r=>{
+    const p=mapping.get(r.crianca_id);
+    const searchable=[r.nome_padrinho,r.telefone,p?.nome_exibicao,p?.codigo].join(' ').toLocaleLowerCase('pt-BR');
+    return (filter==='todos'||r.situacao===filter)&&(!term||searchable.includes(term));
+  });
+  document.getElementById('requests-empty').hidden=visibleRequests.length>0;
+  document.getElementById('requests-empty').textContent=requests.length?'Nenhum resultado para os filtros selecionados.':'Nenhuma solicitação registrada até o momento.';
+  for(const r of visibleRequests){
     const tr=document.createElement('tr');
     const p=mapping.get(r.crianca_id);
     for(const value of [p?.nome_exibicao||p?.codigo||'Perfil indisponível',r.nome_padrinho,r.telefone,r.email||'—',requestLabels[r.situacao]||r.situacao,new Date(r.criada_em).toLocaleString('pt-BR')]){
       tr.appendChild(node('td',value));
     }
     const td=node('td');
+    const phone=String(r.telefone||'').replace(/\D/g,'');
+    if(phone.length>=10){
+      const chat=node('a','WhatsApp ↗','btn tiny secondary');
+      chat.href='https://wa.me/'+(phone.startsWith('55')?phone:'55'+phone);
+      chat.target='_blank';chat.rel='noopener noreferrer';chat.title='Abrir conversa com o interessado';
+      td.appendChild(chat);td.append(' ');
+    }
     if(r.situacao==='em_contato'){
       const accept=node('button','Confirmar','btn tiny');
       accept.type='button';accept.addEventListener('click',()=>updateRequest(r,'confirmado'));
@@ -229,6 +262,24 @@ function render(){
     tr.appendChild(td);requestsEl.appendChild(tr);
   }
 }
+document.getElementById('request-search').addEventListener('input',render);
+document.getElementById('request-status-filter').addEventListener('change',render);
+document.getElementById('export-requests').addEventListener('click',()=>{
+  if(!session||!requests.length)return;
+  const safe=(value)=>{
+    let s=String(value??'');
+    if(/^[\s]*[=+@\-\t\r]/.test(s))s="'"+s;
+    return '"'+s.replace(/"/g,'""')+'"';
+  };
+  const byId=new Map(children.map(c=>[c.id,c]));
+  const rows=[['Perfil','Nome do padrinho','Telefone','E-mail','Situação','Data']];
+  for(const r of requests){
+    const p=byId.get(r.crianca_id);
+    rows.push([p?.nome_exibicao||p?.codigo||'',r.nome_padrinho,r.telefone,r.email||'',requestLabels[r.situacao]||r.situacao,new Date(r.criada_em).toLocaleString('pt-BR')]);
+  }
+  const file=new Blob(['\ufeff'+rows.map(row=>row.map(safe).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download='interessados-natal-2026.csv';a.click();URL.revokeObjectURL(url);
+});
 async function updateRequest(request,status){
   const action=status==='confirmado'?'confirmar':'liberar';
   if(!confirm('Deseja '+action+' esta solicitação?'))return;
