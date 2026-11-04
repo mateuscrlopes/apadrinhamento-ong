@@ -1,7 +1,7 @@
-/* Natal de Afeto — visual público. A lógica de cadastro permanece no HTML. */
+/* Campanha de Natal — visual público. A lógica de cadastro permanece no HTML. */
 :root {
-  --plum: #331d3d;
-  --plum-deep: #25112f;
+  --plum: #642cb5;
+  --plum-deep: #261348;
   --cream: #faf5ed;
   --paper: #fffdf8;
   --pink: #f5b4b8;
@@ -11,7 +11,7 @@
   --ink: #34283c;
   --muted: #726677;
   --border: #e7dcd8;
-  --purple: #674783;
+  --purple: #9148f5;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
@@ -102,7 +102,7 @@ a { color: inherit; }
 .grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 23px; }
 .card { border-radius: 15px; border: 1px solid #e9ddd7; background: var(--paper); box-shadow: none; transition: transform .2s ease,box-shadow .2s ease; }
 .card:hover { transform: translateY(-4px); box-shadow: 0 17px 35px #4b2b3816; }
-.photo { height: 280px; background: linear-gradient(135deg,#e8dee7,#f5c9c7); overflow: hidden; }.photo::after { content: '✳'; position: absolute; bottom: -67px; right: -17px; font-size: 240px; color: #ffffff30; z-index: 0; line-height: 1; }.photo > svg { position: relative; z-index: 1; stroke: #b695b2; }.photo .profile-photo { position: relative; z-index: 1; object-position: center 35%; }.photo .tag { z-index: 2; right: 15px; top: 15px; }
+.photo { height: 280px; background: linear-gradient(135deg,#e8dee7,#f5c9c7); overflow: hidden; }.photo::after { content: ''; position: absolute; bottom: -67px; right: -17px; font-size: 240px; color: #ffffff30; z-index: 0; line-height: 1; }.photo > svg { position: relative; z-index: 1; stroke: #b695b2; }.photo .profile-photo { position: relative; z-index: 1; object-position: center 35%; }.photo .tag { z-index: 2; right: 15px; top: 15px; }
 .tag { font-size: 10px; font-weight: 800; letter-spacing: .03em; padding: 8px 12px; border-radius: 100px; }.tag.contact { background: #ffecc6; color: #805b1f; }.tag.sponsored { background: #e9ddef; color: #553166; }
 .info { padding: 23px 25px 25px; }.info h3 { font-size: 23px; font-weight: 800; letter-spacing: -.04em; margin-bottom: 0; }.age { font-size: 12px; margin-bottom: 16px; }.details { gap: 12px; font-size: 11px; padding-block: 17px 21px; }.details strong { font-size: 14px; font-weight: 800; }
 .cta { background: var(--plum); color: white; border-radius: 8px; padding: 15px 14px; font-size: 13px; letter-spacing: .01em; transition: background .2s; }.cta:not(:disabled):hover { background: #54305d; }.cta:disabled { background: #ece5e4; color: #938b92; }
@@ -119,3 +119,39 @@ dialog { border-radius: 20px; background: var(--paper); width: min(94vw,475px); 
 @media (max-width: 800px) { .nav-links a:not(.nav-action) { display: none; }.hero-inner { grid-template-columns: 1fr; min-height: 0; padding-block: 54px 40px; }.hero-copy { max-width: 630px; }.hero h1 { font-size: clamp(3.5rem,10vw,6rem); }.hero-scene { height: 320px; transform: scale(.65); transform-origin: 50% 0; margin: 0 auto -105px; }.how-head { grid-template-columns: 1fr; gap: 17px; }.how-head p { max-width: 560px; }.steps { grid-template-columns: repeat(2,minmax(0,1fr)); }.step { min-height: 225px; }.gallery-section { padding-block: 75px; }.grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.photo { height: 230px; }.closing-inner { align-items: start; flex-direction: column; } }
 @media (max-width: 560px) { .wrap { padding-inline: 20px; }.nav-inner { min-height: 73px; }.brand-symbol { width: 36px; height: 36px; font-size: 25px; }.brand-wordmark { font-size: 30px; }.brand-caption { font-size: 8px; padding-left: 10px; margin-left: 2px; }.nav-links .nav-action { font-size: 0; padding: 11px 13px; }.nav-action span { font-size: 21px; padding: 0; }.hero-inner { padding-block: 54px 28px; }.hero-copy { padding: 0; }.hero h1 { font-size: clamp(3.1rem, 13.2vw, 4.4rem); margin: 23px 0; }.hero p { font-size: 13px; line-height: 1.8; }.hero-actions { align-items: stretch; }.hero-actions a { flex: 1; gap: 8px; font-size: 11px; padding: 15px 17px; }.hero-caption { margin-top: 32px; }.hero-scene { height: 240px; margin-bottom: -90px; transform: scale(.51); width: 460px; margin-left: calc(50% - 230px); }.ribbon { height: 43px; }.ribbon-track { font-size: 10px; }.ribbon-track b { font-size: 17px; }.how-section { padding-block: 72px; }.how-head h2, .heading h2, .closing h2 { font-size: clamp(2.45rem,10vw,3.2rem); }.how-head p { font-size: 13px; }.steps { gap: 9px; }.step { min-height: 215px; padding: 17px; }.step-illustration { font-size: 40px; height: 65px; }.step h3 { font-size: 18px; }.step p { font-size: 11px; }.gallery-section { padding-block: 70px; }.heading { gap: 20px; }.heading .subtitle { margin-top: 15px; }.stats { width: 100%; }.stat { flex: 1; min-width: 0; padding: 11px 5px; }.stat strong { font-size: 25px; }.stat span { font-size: 9px; }.grid { grid-template-columns: 1fr; gap: 18px; }.photo { height: 290px; }.info { padding: 22px; }.filters { gap: 8px; }.filter { padding: 9px 11px; font-size: 11px; }.count { margin: 6px 0 0; }.note { padding: 18px; }.closing { padding-block: 64px 68px; }.closing a { width: 100%; text-align: center; }.footer-inner { align-items: start; flex-direction: column; }.footer-inner p { text-align: left; }.modal-body { padding: 25px 22px; } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+/* Marca AME, iconografia vetorial e faixa contínua. */
+.icon-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.icon { width: 20px; height: 20px; display: inline-block; flex: none; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ame-logo { object-fit: contain; display: block; flex: none; }
+.brand-link .ame-logo { width: 55px; height: 55px; }
+.brand-link .brand-caption { margin-left: 2px; font-size: 11px; }
+.nav-action .icon { margin-left: 10px; width: 17px; height: 17px; }
+.eyebrow-star { color: var(--gold); margin-right: 9px; width: 20px; height: 20px; }
+.hero-actions .hero-primary { background: #ad74ff; color: #24103c; }
+.hero-actions a .icon { width: 19px; height: 19px; }
+.sparkle { color: var(--gold); margin-right: 9px; width: 17px; height: 17px; }
+.scene-star { position: absolute; color: var(--gold); stroke-width: 1.4; }
+.star-one { width: 52px; height: 52px; }
+.star-two { width: 33px; height: 33px; }
+.star-three { width: 28px; height: 28px; color: var(--pink); }
+.sticker-bottom .icon { width: 24px; height: 24px; color: #b75167; display: block; margin-bottom: 4px; }
+.gift-heart { width: 48px; height: 48px; left: 61px; top: 142px; stroke-width: 3; }
+.ribbon-track { display: flex; white-space: nowrap; width: max-content; animation: move-ribbon var(--ribbon-duration, 26s) linear infinite; will-change: transform; }
+.ribbon-track .ribbon-segment { display: inline-flex; flex: none; align-items: center; gap: 24px; padding-right: 24px; }
+.ribbon-segment .icon { width: 19px; height: 19px; stroke-width: 2; }
+@keyframes move-ribbon { to { transform: translateX(var(--ribbon-distance, -33.333333%)); } }
+.step-illustration { width: 52px; height: 91px; display: block; padding-block: 13px; stroke-width: 1.5; }
+.photo::after { content: ''; bottom: -80px; right: -58px; width: 240px; height: 240px; border: 26px solid #ffffff30; border-radius: 50%; }
+.note-icon { width: 30px; height: 30px; }
+.closing a .icon { margin-left: 27px; width: 18px; height: 18px; }
+.closing-star { width: 330px; height: 330px; stroke-width: 1; }
+.footer-brand .ame-logo { width: 44px; height: 44px; }
+.modal-body .cta .icon { margin-left: 10px; width: 16px; height: 16px; }
+@media (max-width: 560px) {
+  .brand-link .ame-logo { width: 42px; height: 42px; }
+  .nav-action .icon { width: 21px; height: 21px; margin: 0; }
+  .ribbon-track .ribbon-segment { gap: 17px; padding-right: 17px; }
+  .ribbon-segment .icon { width: 16px; height: 16px; }
+  .step-illustration { width: 40px; height: 65px; padding-block: 9px; }
+}

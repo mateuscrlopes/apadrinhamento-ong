@@ -1,5 +1,5 @@
-/* Painel Natal de Afeto: a segurança de acesso permanece no Supabase Auth. */
-:root { --primary:#4a3056; --dark:#2e1d38; --ink:#32283c; --muted:#817582; --bg:#f7f3ee; --line:#e8dfdc; --green:#2b764c; --red:#ad494d; }
+/* Painel da Campanha de Natal: segurança de acesso pelo Supabase Auth. */
+:root { --primary:#642cb5; --dark:#261348; --ink:#32283c; --muted:#817582; --bg:#f7f3ee; --line:#e8dfdc; --green:#2b764c; --red:#ad494d; }
 * { box-sizing:border-box; }
 body { background:var(--bg); color:var(--ink); font:14px/1.55 'DM Sans', Arial, sans-serif; }
 button,input,select { font:inherit; }
@@ -36,3 +36,13 @@ dialog { border-radius:16px; background:#fffdfa; }.modal { padding:30px; }.modal
 @media(max-width:980px) { .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }.grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.top { align-items:start; } }
 @media(max-width:640px) { header { padding:15px 18px; }.private-label { display:none; }main { padding:32px 16px 65px; }h1 { font-size:2.65rem; }.top { flex-direction:column; align-items:stretch; }.top .card-actions { margin-top:4px; }.metrics { gap:9px; }.metric { min-height:132px; padding:15px; }.metric strong { font-size:37px; }.metric > span { font-size:11px; }.metric small { font-size:9px; }.tabs { flex-wrap:nowrap; }.tab { flex:1; padding:12px 8px; font-size:11px; }.request-tools { flex-direction:column; align-items:stretch; }.status-filter-label { min-width:0; }.grid { grid-template-columns:1fr; }.login { padding:27px 23px; margin:25px auto; }.login h1 { font-size:29px; }.fields { grid-template-columns:1fr; }.wide { grid-column:auto; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; animation:none!important; } }
+.ame-admin-logo { display:block; width:54px; height:54px; object-fit:contain; flex:none; }
+.brand strong { font-size:21px; letter-spacing:-.035em; line-height:1.15; }
+.brand > div > span { font-size:11px; }
+header { background:var(--dark); }
+.btn { background:var(--primary); }
+.tab[aria-selected="true"] { background:var(--primary); border-color:var(--primary); }
+.metric-highlight { background:#eadcfb; border-color:#eadcfb; }
+.metric-highlight strong { color:#6c32bb; }
+.login-symbol { background:#efe3ff; color:var(--primary); }
+@media(max-width:640px) { .ame-admin-logo { width:42px; height:42px; }.brand strong { font-size:17px; } }

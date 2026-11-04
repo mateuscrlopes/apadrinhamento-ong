@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#321c3c">
+<meta name="theme-color" content="#321450">
 <title>Painel da Campanha | AME</title>
 <style>
 :root{--primary:#69449b;--dark:#39254f;--ink:#31283b;--muted:#706979;--bg:#faf8fc;--line:#e7dfec;--green:#267449;--red:#a43c42}
@@ -41,12 +41,12 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
 </head>
 <body>
 <header>
-  <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><div><strong>ame<span class="brand-dot">.</span></strong><span>Painel da campanha · Natal 2026</span></div></div>
-  <div class="header-right"><span class="private-label">ÁREA RESTRITA</span><button type="button" class="btn ghost tiny" id="logout" hidden>Sair <span aria-hidden="true">↗</span></button></div>
+  <div class="brand"><img class="ame-admin-logo" src="./assets/logo-ame.webp" alt="Logotipo AME" width="54" height="54"><div><strong>Campanha de Natal</strong><span>Painel da equipe · 2026</span></div></div>
+  <div class="header-right"><span class="private-label">ÁREA RESTRITA</span><button type="button" class="btn ghost tiny" id="logout" hidden>Sair</button></div>
 </header>
 <main>
   <section id="login-section" class="card login">
-    <div class="login-symbol" aria-hidden="true">♡</div>
+    <div class="login-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="35" height="35" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></div>
     <p class="section-kicker">ACESSO DA EQUIPE</p>
     <h1>Bem-vindo ao <em>painel da campanha.</em></h1>
     <p class="muted">Um lugar para acompanhar cada gesto de carinho. Entre com a conta autorizada pela ONG.</p>
@@ -78,7 +78,7 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
       <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="false">Perfis das crianças</button>
     </nav>
     <section id="profiles-panel" hidden><div class="panel-title"><div><h2>Perfis da campanha</h2><p class="muted">Cadastre, atualize e acompanhe a disponibilidade.</p></div></div><div id="profiles" class="grid"></div></section>
-    <section id="requests-panel"><div class="panel-title"><div><h2>Quem quer fazer parte</h2><p class="muted">Acompanhe os contatos e confirme os apadrinhamentos após conversar com os interessados.</p></div><button class="btn ghost" id="export-requests" type="button">Exportar CSV ↓</button></div>
+    <section id="requests-panel"><div class="panel-title"><div><h2>Quem quer fazer parte</h2><p class="muted">Acompanhe os contatos e confirme os apadrinhamentos após conversar com os interessados.</p></div><button class="btn ghost" id="export-requests" type="button">Exportar CSV</button></div>
       <div class="request-tools"><label class="search-label">Buscar nome, telefone ou perfil<input type="search" id="request-search" placeholder="Buscar interessado ou criança..."></label><label class="status-filter-label">Situação<select id="request-status-filter"><option value="todos">Todas as situações</option><option value="em_contato">Em contato</option><option value="confirmado">Confirmado</option><option value="cancelado">Cancelado</option></select></label></div>
       <div class="card table-scroll"><table class="table">
       <thead><tr><th>Perfil</th><th>Interessado</th><th>WhatsApp</th><th>E-mail</th><th>Situação</th><th>Data</th><th>Ações</th></tr></thead>
@@ -244,7 +244,7 @@ function render(){
     const td=node('td');
     const phone=String(r.telefone||'').replace(/\D/g,'');
     if(phone.length>=10){
-      const chat=node('a','WhatsApp ↗','btn tiny secondary');
+      const chat=node('a','WhatsApp','btn tiny secondary');
       chat.href='https://wa.me/'+(phone.startsWith('55')?phone:'55'+phone);
       chat.target='_blank';chat.rel='noopener noreferrer';chat.title='Abrir conversa com o interessado';
       td.appendChild(chat);td.append(' ');
