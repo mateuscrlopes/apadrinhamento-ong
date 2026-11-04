@@ -248,9 +248,11 @@
       content.appendChild(makeElement('p','age',profile.idade+' anos'));
       const details=makeElement('div','details');
       const roupa=makeElement('div','','Camisa');
-      roupa.appendChild(makeElement('strong','','Tamanho '+profile.tamanho_roupa));
+      const shirtSize=String(profile.tamanho_roupa||'').trim();
+      roupa.appendChild(makeElement('strong','',/^a confirmar$/i.test(shirtSize)?'A confirmar':'Tamanho '+shirtSize));
       const calcado=makeElement('div','','Sapato');
-      calcado.appendChild(makeElement('strong','','Nº '+profile.tamanho_calcado));
+      const shoeSize=String(profile.tamanho_calcado||'').trim();
+      calcado.appendChild(makeElement('strong','',/^a confirmar$/i.test(shoeSize)?'A confirmar':'Nº '+shoeSize));
       details.append(roupa,calcado);
       content.appendChild(details);
       const button=makeElement('button','cta',profile.situacao==='disponivel'?'Quero apadrinhar':'Indisponível no momento');
