@@ -49,14 +49,25 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
     <div class="login-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="35" height="35" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></div>
     <p class="section-kicker">ACESSO DA EQUIPE</p>
     <h1>Bem-vindo ao <em>painel da campanha.</em></h1>
-    <p class="muted">Um lugar para acompanhar cada gesto de carinho. Entre com a conta autorizada pela ONG.</p>
+    <p class="muted" id="login-intro">Um lugar para acompanhar cada gesto de carinho. Entre com a conta autorizada pela ONG.</p>
+    <div class="auth-choice" role="group" aria-label="Acesso ao painel">
+      <button type="button" id="show-login" class="auth-choice-button" aria-pressed="true">Entrar</button>
+      <button type="button" id="show-register" class="auth-choice-button" aria-pressed="false">Criar minha conta</button>
+    </div>
     <form id="login-form">
       <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
       <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
       <button class="btn" type="submit" id="login-button">Entrar</button>
     </form>
+    <form id="register-form" hidden>
+      <label>Seu e-mail<input name="email" type="email" autocomplete="email" maxlength="254" placeholder="seuemail@exemplo.com" required></label>
+      <label>Crie sua senha<input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="Pelo menos 10 caracteres" required></label>
+      <label>Confirme sua senha<input name="confirmation" type="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="Repita a senha" required></label>
+      <button class="btn" type="submit" id="register-button">Criar meu acesso</button>
+    </form>
     <p class="message" id="login-message" role="status"></p>
-    <div class="notice">O acesso deve ser concedido por um administrador da ONG. Esta página não permite cadastro público.</div>
+    <p class="message" id="register-message" role="status" aria-live="polite" hidden></p>
+    <div class="notice">Você pode criar sua conta aqui. Para proteger os dados dos padrinhos, o acesso ao painel só é liberado após a aprovação de um administrador da ONG.</div>
   </section>
   <section id="dashboard" hidden>
     <div class="top">
@@ -109,6 +120,11 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
           <div id="team-members" class="team-members"></div>
         </div>
       </div>
+      <div class="card team-requests-card">
+        <h3>Solicitações de acesso</h3>
+        <p class="muted">Pessoas que criaram conta pela tela de entrada e aguardam autorização da ONG.</p>
+        <div id="team-pending" class="team-members"></div>
+      </div>
     </section>
   </section>
 </main>
@@ -148,7 +164,8 @@ const profileForm=document.getElementById('profile-form');
 const profilesEl=document.getElementById('profiles');
 const requestsEl=document.getElementById('requests');
 const loginForm=document.getElementById('login-form');
-let api=null,session=null,children=[],requests=[],teamMembers=[],editingId=null,role='operador';
+const registerForm=document.getElementById('register-form');
+let api=null,session=null,children=[],requests=[],teamMembers=[],accessRequests=[],editingId=null,role='operador';
 let previewUrl=null;
 const statusLabels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
 const requestLabels={em_contato:'Em contato',confirmado:'Confirmado',cancelado:'Cancelado'};
@@ -157,7 +174,7 @@ function message(text,error=false){msg.textContent=text;msg.classList.toggle('ok
 function authorized(value){
   authSection.hidden=!value;
   dashboard.hidden=value;
-  document.getElementById('logout').hidden=value;
+  document.getElementById('logout').hidden=value&&!session?.access_token;
 }
 async function apiCall(method,body){
   const {data:authData}=await api.auth.getSession();
@@ -202,6 +219,7 @@ async function refresh(){
     children=data.criancas||[];
     requests=data.solicitacoes||[];
     teamMembers=data.equipe||[];
+    accessRequests=data.pedidos_acesso||[];
     role=data.papel||'operador';
     document.getElementById('welcome').textContent='Acompanhe os perfis e interesses recebidos.';
     document.getElementById('new-profile').hidden=role!=='administrador';
@@ -216,10 +234,14 @@ async function refresh(){
     message('');
     return true;
   }catch(error){
-    message(error.message,true);
+    const awaitingApproval=error.status===403&&session?.user?.user_metadata?.ame_acesso_pendente===true;
+    const explanation=awaitingApproval
+      ?'Sua conta foi criada, mas ainda aguarda aprovação da ONG. Confirme seu e-mail, se solicitado, e tente entrar novamente após a aprovação.'
+      :error.message;
+    message(explanation,true);
     if(error.status===401||error.status===403){
       authorized(true);
-      document.getElementById('login-message').textContent=error.message;
+      document.getElementById('login-message').textContent=explanation;
     }
     return false;
   }
@@ -299,10 +321,11 @@ function render(){
 function renderTeam(){
   const container=document.getElementById('team-members');
   container.replaceChildren();
+  const pending=document.getElementById('team-pending');
+  pending.replaceChildren();
   if(role!=='administrador')return;
   if(!teamMembers.length){
     container.appendChild(node('p','Ainda não há integrantes cadastrados.','muted'));
-    return;
   }
   for(const member of teamMembers){
     const row=node('div',undefined,'team-member');
@@ -313,6 +336,36 @@ function renderTeam(){
     row.appendChild(node('span',member.ativo?'Ativo':'Inativo','status '+(member.ativo?'available':'')));
     container.appendChild(row);
   }
+  if(!accessRequests.length){
+    pending.appendChild(node('p','Nenhuma solicitação de acesso aguardando aprovação.','muted'));
+  }
+  for(const request of accessRequests){
+    const row=node('div',undefined,'team-member team-pending-row');
+    const info=node('div');
+    info.appendChild(node('strong',request.email));
+    info.appendChild(node('small',request.email_confirmado?'E-mail confirmado · Aguardando aprovação':'Aguardando confirmação do e-mail'));
+    row.appendChild(info);
+    if(request.email_confirmado){
+      const actions=node('div',undefined,'card-actions');
+      for(const [papel,label] of [['operador','Aprovar operador'],['administrador','Aprovar administrador']]){
+        const button=node('button',label,papel==='operador'?'btn tiny':'btn secondary tiny');
+        button.type='button';
+        button.addEventListener('click',()=>approveUser(request,papel));
+        actions.appendChild(button);
+      }
+      row.appendChild(actions);
+    }else{
+      row.appendChild(node('span','E-mail pendente','status pending'));
+    }
+    pending.appendChild(row);
+  }
+}
+async function approveUser(request,papel){
+  if(!confirm('Autorizar '+request.email+' como '+(papel==='administrador'?'administrador':'operador')+' da ONG?'))return;
+  try{
+    const result=await apiCall('POST',{acao:'aprovar_usuario',usuario_id:request.id,papel});
+    await refresh();message(result.mensagem||'Acesso aprovado.');
+  }catch(error){message(error.message,true);}
 }
 document.getElementById('request-search').addEventListener('input',render);
 document.getElementById('request-status-filter').addEventListener('change',render);
@@ -474,6 +527,46 @@ document.querySelectorAll('[data-tab]').forEach((button)=>{
     document.getElementById('team-panel').hidden=tab!=='team';
   });
 });
+function showAuthView(view){
+  const registering=view==='register';
+  loginForm.hidden=registering;
+  registerForm.hidden=!registering;
+  document.getElementById('show-login').setAttribute('aria-pressed',String(!registering));
+  document.getElementById('show-register').setAttribute('aria-pressed',String(registering));
+  document.getElementById('login-message').hidden=registering;
+  document.getElementById('register-message').hidden=!registering;
+  document.getElementById('login-intro').textContent=registering
+    ?'Crie seu acesso com seu próprio e-mail e senha. A equipe da ONG aprovará sua conta antes de você consultar o painel.'
+    :'Um lugar para acompanhar cada gesto de carinho. Entre com a conta autorizada pela ONG.';
+}
+document.getElementById('show-login').addEventListener('click',()=>showAuthView('login'));
+document.getElementById('show-register').addEventListener('click',()=>showAuthView('register'));
+registerForm.addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const fields=registerForm.elements;
+  const password=fields.namedItem('password').value;
+  const confirmation=fields.namedItem('confirmation').value;
+  const notice=document.getElementById('register-message');
+  if(password.length<10){notice.textContent='Sua senha precisa ter pelo menos 10 caracteres.';return;}
+  if(password!==confirmation){notice.textContent='As senhas não coincidem. Confira e tente novamente.';return;}
+  const button=document.getElementById('register-button');
+  button.disabled=true;
+  notice.textContent='Criando sua conta...';notice.classList.remove('ok');
+  try{
+    if(!api)throw Error('A conexão com a ONG está indisponível. Tente novamente mais tarde.');
+    const email=fields.namedItem('email').value.trim().toLowerCase();
+    const {data,error}=await api.auth.signUp({email,password,options:{
+      data:{ame_acesso_pendente:true},
+      emailRedirectTo:'https://mateuscrlopes.github.io/apadrinhamento-ong/admin.html'
+    }});
+    if(error)throw error;
+    if(data.session){await api.auth.signOut({scope:'local'});session=null;}
+    registerForm.reset();
+    notice.classList.add('ok');
+    notice.textContent='Cadastro solicitado! Confira seu e-mail para confirmar a conta. Depois, aguarde a aprovação de um administrador da ONG.';
+  }catch(error){notice.textContent=error.message||'Não foi possível criar sua conta.';notice.classList.remove('ok');}
+  finally{button.disabled=false;}
+});
 loginForm.addEventListener('submit',async(e)=>{
   e.preventDefault();const btn=document.getElementById('login-button');btn.disabled=true;
   const email=loginForm.elements.namedItem('email').value;
@@ -489,7 +582,10 @@ loginForm.addEventListener('submit',async(e)=>{
   finally{btn.disabled=false;}
 });
 document.getElementById('logout').addEventListener('click',async()=>{
-  try{await api.auth.signOut();}finally{session=null;authorized(true);loginForm.reset();message('');}
+  try{await api.auth.signOut({scope:'local'});}finally{
+    session=null;authorized(true);loginForm.reset();showAuthView('login');
+    document.getElementById('login-message').textContent='';message('');
+  }
 });
 async function start(){
   if(!config.supabaseUrl||!config.supabasePublishableKey||!config.adminEndpoint||!window.supabase){

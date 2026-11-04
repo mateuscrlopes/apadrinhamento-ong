@@ -84,17 +84,28 @@ Deno.serve(async(req)=>{
       return {...fields,foto_url};
     }));
     let equipe: Array<Record<string,unknown>> | undefined;
+    let pedidos_acesso: Array<Record<string,unknown>> | undefined;
     if(team.papel==="administrador"){
       const {data:members,error:membersError}=await admin.from("equipe_ong")
         .select("usuario_id,papel,ativo,criado_em").order("criado_em").limit(100);
       if(membersError)return send({mensagem:"Não foi possível carregar a equipe."},500,origin);
+      const {data:registered,error:registeredError}=await admin.auth.admin.listUsers({page:1,perPage:1000});
+      if(registeredError)return send({mensagem:"Não foi possível carregar os pedidos de acesso."},500,origin);
+      const memberIds=new Set((members??[]).map(member=>member.usuario_id));
+      // Metadata indica apenas que a pessoa pediu acesso; nunca dá permissão.
+      // O acesso depende exclusivamente do vínculo ativo em equipe_ong.
+      pedidos_acesso=(registered.users??[])
+        .filter(account=>account.user_metadata?.ame_acesso_pendente===true&&!memberIds.has(account.id))
+        .map(account=>({id:account.id,email:account.email??"E-mail indisponível",
+          email_confirmado:!!account.email_confirmed_at,criado_em:account.created_at}));
       equipe=await Promise.all((members??[]).map(async(member)=>{
         const {data}=await admin.auth.admin.getUserById(member.usuario_id);
         return {email:data.user?.email??"E-mail indisponível",papel:member.papel,
           ativo:member.ativo,criado_em:member.criado_em};
       }));
     }
-    return send({criancas:perfis,solicitacoes:requests.data??[],papel:team.papel,equipe},200,origin);
+    return send({criancas:perfis,solicitacoes:requests.data??[],papel:team.papel,
+      equipe,pedidos_acesso},200,origin);
   }
   if(req.method!=="POST")return send({mensagem:"Método não permitido."},405,origin);
   const contentType=(req.headers.get("content-type")??"").toLowerCase();
@@ -164,6 +175,24 @@ Deno.serve(async(req)=>{
   let body:Record<string,unknown>;
   try { body=await req.json(); if(!body||Array.isArray(body)||typeof body!=="object")throw Error(); }
   catch{return send({mensagem:"Dados inválidos."},400,origin);}
+
+  if(body.acao==="aprovar_usuario"){
+    if(team.papel!=="administrador")
+      return send({mensagem:"Somente administradores podem aprovar acessos."},403,origin);
+    if(typeof body.usuario_id!=="string"||!uuid.test(body.usuario_id)
+      ||!["administrador","operador"].includes(String(body.papel)))
+      return send({mensagem:"Usuário ou permissão inválidos."},400,origin);
+    const {data:account,error:accountError}=await admin.auth.admin.getUserById(body.usuario_id);
+    if(accountError||!account.user||account.user.user_metadata?.ame_acesso_pendente!==true)
+      return send({mensagem:"Este usuário não possui um pedido de acesso válido."},404,origin);
+    if(!account.user.email_confirmed_at)
+      return send({mensagem:"A pessoa precisa confirmar o e-mail antes da aprovação."},409,origin);
+    const {error:approveError}=await admin.from("equipe_ong").upsert({
+      usuario_id:account.user.id,papel:body.papel,ativo:true
+    },{onConflict:"usuario_id"});
+    if(approveError)return send({mensagem:"Não foi possível aprovar este acesso."},500,origin);
+    return send({sucesso:true,mensagem:"Acesso aprovado. A pessoa já pode entrar com a senha que criou."},200,origin);
+  }
 
   // Somente administradores podem convidar integrantes. Cada pessoa define
   // sua própria senha em uma página de aceite; nenhuma senha passa pelo painel.
