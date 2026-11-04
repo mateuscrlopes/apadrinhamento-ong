@@ -280,7 +280,7 @@
       const visible=activeFilter==='todos'?perfis:perfis.filter(function(profile){return profile.situacao===activeFilter;});
       visible.forEach(function(profile){cards.appendChild(makeCard(profile));});
       if(!visible.length)cards.appendChild(makeElement('p','empty','Nenhum perfil encontrado nesta categoria.'));
-      document.getElementById('result-count').textContent=visible.length+' perfil(is) exibido(s)';
+      document.getElementById('result-count').textContent=visible.length===1?'1 perfil exibido':visible.length+' perfis exibidos';
     }
     async function loadProfiles(){
       if(!endpoint){
