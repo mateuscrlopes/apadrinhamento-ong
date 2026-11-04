@@ -76,6 +76,7 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
     <nav class="tabs" aria-label="Seções">
       <button class="tab" id="requests-tab" type="button" data-tab="requests" aria-selected="true">Interesses recebidos</button>
       <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="false">Perfis das crianças</button>
+      <button class="tab" id="team-tab" type="button" data-tab="team" aria-selected="false" hidden>Usuários da equipe</button>
     </nav>
     <section id="profiles-panel" hidden><div class="panel-title"><div><h2>Perfis da campanha</h2><p class="muted">Cadastre, atualize e acompanhe a disponibilidade.</p></div></div><div id="profiles" class="grid"></div></section>
     <section id="requests-panel"><div class="panel-title"><div><h2>Quem quer fazer parte</h2><p class="muted">Acompanhe os contatos e confirme os apadrinhamentos após conversar com os interessados.</p></div><button class="btn ghost" id="export-requests" type="button">Exportar CSV</button></div>
@@ -84,6 +85,31 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
       <thead><tr><th>Perfil</th><th>Interessado</th><th>WhatsApp</th><th>E-mail</th><th>Situação</th><th>Data</th><th>Ações</th></tr></thead>
       <tbody id="requests"></tbody>
     </table><p class="empty" id="requests-empty" hidden>Nenhuma solicitação registrada.</p></div></section>
+    <section id="team-panel" hidden>
+      <div class="panel-title"><div><h2>Usuários da equipe</h2><p class="muted">Convide pessoas de confiança para acompanhar a campanha. Cada uma escolhe a própria senha.</p></div></div>
+      <div class="team-layout">
+        <div class="card team-invite-card">
+          <h3>Convidar integrante</h3>
+          <p class="muted">Somente administradores podem gerar convites. O link é individual e temporário.</p>
+          <form id="invite-form">
+            <label>E-mail da pessoa<input name="email" type="email" autocomplete="off" placeholder="pessoa@exemplo.com" maxlength="254" required></label>
+            <label>Permissão<select name="papel"><option value="operador">Operador — acompanha apadrinhamentos</option><option value="administrador">Administrador — gerencia a campanha e a equipe</option></select></label>
+            <button class="btn" id="invite-button" type="submit">Gerar convite</button>
+          </form>
+          <p class="message" id="invite-message" role="status" aria-live="polite"></p>
+          <div id="invite-result" class="invite-result" hidden>
+            <label>Link do convite<input id="invite-link" type="text" readonly aria-label="Link individual de convite"></label>
+            <button id="copy-invite" type="button" class="btn secondary">Copiar link para compartilhar</button>
+            <p class="muted">Compartilhe apenas com a pessoa convidada. Depois que ela abrir o link, poderá definir sua senha.</p>
+          </div>
+        </div>
+        <div class="card team-members-card">
+          <h3>Pessoas com acesso</h3>
+          <p class="muted">Somente contas autorizadas conseguem consultar os dados dos padrinhos.</p>
+          <div id="team-members" class="team-members"></div>
+        </div>
+      </div>
+    </section>
   </section>
 </main>
 <dialog id="profile-modal" aria-labelledby="profile-modal-title">
@@ -122,7 +148,7 @@ const profileForm=document.getElementById('profile-form');
 const profilesEl=document.getElementById('profiles');
 const requestsEl=document.getElementById('requests');
 const loginForm=document.getElementById('login-form');
-let api=null,session=null,children=[],requests=[],editingId=null,role='operador';
+let api=null,session=null,children=[],requests=[],teamMembers=[],editingId=null,role='operador';
 let previewUrl=null;
 const statusLabels={disponivel:'Disponível',em_contato:'Em contato',confirmado:'Apadrinhado'};
 const requestLabels={em_contato:'Em contato',confirmado:'Confirmado',cancelado:'Cancelado'};
@@ -175,10 +201,17 @@ async function refresh(){
     const data=await apiCall('GET');
     children=data.criancas||[];
     requests=data.solicitacoes||[];
+    teamMembers=data.equipe||[];
     role=data.papel||'operador';
     document.getElementById('welcome').textContent='Acompanhe os perfis e interesses recebidos.';
     document.getElementById('new-profile').hidden=role!=='administrador';
     document.getElementById('test-email').hidden=role!=='administrador';
+    document.getElementById('team-tab').hidden=role!=='administrador';
+    if(role!=='administrador'&&!document.getElementById('team-panel').hidden){
+      document.getElementById('team-panel').hidden=true;
+      document.getElementById('requests-panel').hidden=false;
+      document.querySelectorAll('[data-tab]').forEach(el=>el.setAttribute('aria-selected',String(el.dataset.tab==='requests')));
+    }
     render();
     message('');
     return true;
@@ -261,9 +294,64 @@ function render(){
     }
     tr.appendChild(td);requestsEl.appendChild(tr);
   }
+  renderTeam();
+}
+function renderTeam(){
+  const container=document.getElementById('team-members');
+  container.replaceChildren();
+  if(role!=='administrador')return;
+  if(!teamMembers.length){
+    container.appendChild(node('p','Ainda não há integrantes cadastrados.','muted'));
+    return;
+  }
+  for(const member of teamMembers){
+    const row=node('div',undefined,'team-member');
+    const info=node('div');
+    info.appendChild(node('strong',member.email));
+    info.appendChild(node('small',member.papel==='administrador'?'Administrador':'Operador'));
+    row.appendChild(info);
+    row.appendChild(node('span',member.ativo?'Ativo':'Inativo','status '+(member.ativo?'available':'')));
+    container.appendChild(row);
+  }
 }
 document.getElementById('request-search').addEventListener('input',render);
 document.getElementById('request-status-filter').addEventListener('change',render);
+document.getElementById('invite-form').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  const button=document.getElementById('invite-button');
+  const result=document.getElementById('invite-result');
+  const feedback=document.getElementById('invite-message');
+  result.hidden=true;
+  feedback.textContent='Criando convite...';feedback.classList.remove('ok');
+  button.disabled=true;
+  try{
+    const data=await apiCall('POST',{
+      acao:'convidar_usuario',
+      email:form.elements.namedItem('email').value.trim(),
+      papel:form.elements.namedItem('papel').value
+    });
+    document.getElementById('invite-link').value=data.convite_link;
+    result.hidden=false;
+    feedback.textContent=data.mensagem;
+    feedback.classList.add('ok');
+    form.reset();
+    await refresh();
+  }catch(error){feedback.textContent=error.message;feedback.classList.remove('ok');}
+  finally{button.disabled=false;}
+});
+document.getElementById('copy-invite').addEventListener('click',async()=>{
+  const input=document.getElementById('invite-link');
+  const feedback=document.getElementById('invite-message');
+  try{
+    await navigator.clipboard.writeText(input.value);
+    feedback.textContent='Link copiado. Envie apenas para a pessoa convidada.';
+    feedback.classList.add('ok');
+  }catch{
+    input.focus();input.select();
+    feedback.textContent='Selecione e copie o link acima para compartilhar.';
+  }
+});
 document.getElementById('export-requests').addEventListener('click',()=>{
   if(!session||!requests.length)return;
   const safe=(value)=>{
@@ -378,10 +466,12 @@ document.getElementById('test-email').addEventListener('click',async()=>{
 
 document.querySelectorAll('[data-tab]').forEach((button)=>{
   button.addEventListener('click',()=>{
+    if(button.dataset.tab==='team'&&role!=='administrador')return;
     const tab=button.dataset.tab;
     document.querySelectorAll('[data-tab]').forEach(el=>el.setAttribute('aria-selected',String(el===button)));
     document.getElementById('profiles-panel').hidden=tab!=='profiles';
     document.getElementById('requests-panel').hidden=tab!=='requests';
+    document.getElementById('team-panel').hidden=tab!=='team';
   });
 });
 loginForm.addEventListener('submit',async(e)=>{

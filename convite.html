@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#261348">
+<title>Ativar acesso à equipe | AME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#642cb5;--dark:#261348;--ink:#32283c;--muted:#817582;--line:#e8dfec;--bg:#f8f4fc;--red:#a43c42}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 'DM Sans',Arial,sans-serif}
+[hidden]{display:none!important}header{background:var(--dark);padding:17px max(22px,calc((100vw - 1080px)/2));display:flex;align-items:center;gap:12px;color:#fff}
+header img{width:52px;height:52px;object-fit:contain}header strong{display:block;font-weight:800;font-size:19px}header small{display:block;color:#d0b9ec;font-size:11px}
+main{padding:64px 18px}.card{width:min(100%,520px);margin:auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:35px;box-shadow:0 22px 70px #2913420d}
+.symbol{width:54px;height:54px;border-radius:15px;background:#efe3ff;color:var(--purple);display:grid;place-items:center;margin-bottom:22px}
+.kicker{display:block;color:#7542bd;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:14px}
+h1{font-size:clamp(28px,5vw,38px);letter-spacing:-.055em;line-height:1.12;margin:0 0 15px}h1 em{font-family:'Fraunces',Georgia,serif;color:var(--purple);font-weight:600}
+p{color:var(--muted);font-size:13px}label{display:block;margin:17px 0 0;font-weight:700;font-size:12px;color:#5b476c}
+input{display:block;margin-top:7px;width:100%;font:inherit;padding:13px;border:1px solid #ded1ec;border-radius:9px;color:var(--ink)}input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #d7b4f8;outline-offset:2px}
+button{width:100%;margin-top:24px;border:0;background:var(--purple);color:#fff;border-radius:9px;padding:14px;font:800 13px 'DM Sans',Arial,sans-serif;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+.message{font-size:13px;font-weight:700;min-height:1.3em;margin-top:17px}.message.error{color:var(--red)}.message.ok{color:#267449}
+.footer{margin-top:26px;border-top:1px solid var(--line);padding-top:19px;font-size:12px;color:var(--muted)}.footer a{color:var(--purple);font-weight:700}
+@media(max-width:560px){main{padding:30px 15px}.card{padding:25px 20px}header{padding:14px 19px}header img{width:42px;height:42px}}
+</style>
+</head>
+<body>
+<header><img src="./assets/logo-ame.webp" alt="AME"><div><strong>Campanha de Natal</strong><small>Área da equipe · 2026</small></div></header>
+<main><section class="card">
+  <div class="symbol" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/></svg></div>
+  <span class="kicker">Convite para a equipe</span>
+  <h1>Seu acesso começa <em>aqui.</em></h1>
+  <p id="intro">Estamos verificando seu convite. Aguarde um instante.</p>
+  <form id="password-form" hidden>
+    <label>Crie sua senha<input type="password" name="password" autocomplete="new-password" minlength="10" maxlength="128" placeholder="Mínimo de 10 caracteres" required></label>
+    <label>Confirme sua senha<input type="password" name="confirmation" autocomplete="new-password" minlength="10" maxlength="128" placeholder="Repita a senha" required></label>
+    <button type="submit" id="activate-button">Ativar meu acesso</button>
+  </form>
+  <p class="message" id="status" role="status" aria-live="polite"></p>
+  <div class="footer">O convite é individual e temporário. Se estiver expirado, peça um novo link à pessoa que o convidou.<p><a href="./admin.html">Voltar à entrada do painel</a></p></div>
+</section></main>
+<script src="./js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/dist/umd/supabase.min.js"></script>
+<script>
+'use strict';
+const config=window.CAMPANHA_CONFIG||{};
+const form=document.getElementById('password-form');
+const status=document.getElementById('status');
+const intro=document.getElementById('intro');
+let auth=null;
+function feedback(text,error=false){status.textContent=text;status.className='message '+(error?'error':'ok');}
+async function start(){
+  const params=new URLSearchParams(location.hash.slice(1));
+  const tokenHash=params.get('token_hash');
+  const linkType=params.get('type');
+  history.replaceState(null,'',location.pathname);
+  if(!config.supabaseUrl||!config.supabasePublishableKey||!window.supabase){
+    feedback('A conexão com a ONG não está disponível. Tente novamente mais tarde.',true);return;
+  }
+  if(!tokenHash||!['invite','magiclink'].includes(linkType)){
+    intro.textContent='Não encontramos um convite válido neste endereço.';return;
+  }
+  auth=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey,{auth:{detectSessionInUrl:false}});
+  try{
+    const {data,error}=await auth.auth.verifyOtp({token_hash:tokenHash,type:linkType});
+    if(error||!data.session)throw Error('Este convite expirou ou já foi utilizado. Solicite um novo link.');
+    intro.textContent='Convite confirmado. Escolha uma senha de pelo menos 10 caracteres para acessar o painel com seu próprio e-mail.';
+    form.hidden=false;
+  }catch(error){
+    intro.textContent='Não foi possível validar seu convite.';
+    feedback(error.message||'Solicite outro convite ao administrador.',true);
+  }
+}
+form.addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const password=form.elements.namedItem('password').value;
+  const confirmation=form.elements.namedItem('confirmation').value;
+  if(password.length<10){feedback('Use uma senha com pelo menos 10 caracteres.',true);return;}
+  if(password!==confirmation){feedback('As senhas não coincidem. Confira e tente novamente.',true);return;}
+  const button=document.getElementById('activate-button');
+  button.disabled=true;feedback('Ativando seu acesso...');
+  try{
+    const {error}=await auth.auth.updateUser({password});
+    if(error)throw error;
+    feedback('Senha criada! Redirecionando para o painel.');
+    location.replace('./admin.html');
+  }catch(error){feedback(error.message||'Não foi possível definir sua senha. Tente novamente.',true);}
+  finally{button.disabled=false;}
+});
+start();
+</script>
+</body>
+</html>

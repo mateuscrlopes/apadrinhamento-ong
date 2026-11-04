@@ -51,3 +51,19 @@ h1 em,.login h1 em { color:#8545d0; }
 .login-symbol { background:#ebddff; color:#803cd4; }
 .metric-highlight { background:#e5d7fb; border-color:#e5d7fb; }
 .metric-highlight strong { color:#6430ad; }
+.team-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:18px; }
+.team-layout > .card { padding:28px; }
+.team-layout h3 { font-size:19px; color:var(--dark); margin-bottom:7px; }
+.team-layout .muted { font-size:12px; line-height:1.65; }
+.team-invite-card form { margin-top:22px; }
+.team-invite-card label { margin-bottom:16px; }
+.team-invite-card .btn { width:100%; }
+.invite-result { border:1px solid #e0cff5; background:#f5eeff; border-radius:11px; padding:17px; margin-top:18px; }
+.invite-result input { font-size:12px; background:#fff; }
+.invite-result .muted { margin-bottom:0; }
+.team-members { margin-top:20px; }
+.team-member { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
+.team-member:last-child { border-bottom:0; }
+.team-member strong { display:block; font-size:13px; font-weight:800; overflow-wrap:anywhere; }
+.team-member small { display:block; font-size:11px; margin-top:3px; }
+@media(max-width:760px) { .team-layout { grid-template-columns:1fr; }.team-layout > .card { padding:21px; } }

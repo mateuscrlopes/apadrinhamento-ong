@@ -5,6 +5,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 
 const SITE_ORIGIN = "https://mateuscrlopes.github.io";
+const INVITE_URL = `${SITE_ORIGIN}/apadrinhamento-ong/convite.html`;
 const URL = Deno.env.get("SUPABASE_URL") ?? "";
 const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const admin = createClient(URL, KEY, { auth: { persistSession:false, autoRefreshToken:false } });
@@ -27,6 +28,8 @@ function send(body:Record<string,unknown>,status:number,origin:string|null) {
 const str=(value:unknown,max:number)=>typeof value==="string"&&value.length<=max?value.trim():null;
 const optional=(value:unknown,max:number)=>value===null||value===undefined||value===""?null:str(value,max);
 const validSize=(v:unknown)=>typeof v==="string"&&v.trim().length>=1&&v.trim().length<=20;
+const validEmail=(v:unknown)=>typeof v==="string"&&v.length<=254&&
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
 function validProfile(input:unknown) {
   if(!input||typeof input!=="object")return null;
@@ -80,7 +83,18 @@ Deno.serve(async(req)=>{
       }
       return {...fields,foto_url};
     }));
-    return send({criancas:perfis,solicitacoes:requests.data??[],papel:team.papel},200,origin);
+    let equipe: Array<Record<string,unknown>> | undefined;
+    if(team.papel==="administrador"){
+      const {data:members,error:membersError}=await admin.from("equipe_ong")
+        .select("usuario_id,papel,ativo,criado_em").order("criado_em").limit(100);
+      if(membersError)return send({mensagem:"Não foi possível carregar a equipe."},500,origin);
+      equipe=await Promise.all((members??[]).map(async(member)=>{
+        const {data}=await admin.auth.admin.getUserById(member.usuario_id);
+        return {email:data.user?.email??"E-mail indisponível",papel:member.papel,
+          ativo:member.ativo,criado_em:member.criado_em};
+      }));
+    }
+    return send({criancas:perfis,solicitacoes:requests.data??[],papel:team.papel,equipe},200,origin);
   }
   if(req.method!=="POST")return send({mensagem:"Método não permitido."},405,origin);
   const contentType=(req.headers.get("content-type")??"").toLowerCase();
@@ -150,6 +164,75 @@ Deno.serve(async(req)=>{
   let body:Record<string,unknown>;
   try { body=await req.json(); if(!body||Array.isArray(body)||typeof body!=="object")throw Error(); }
   catch{return send({mensagem:"Dados inválidos."},400,origin);}
+
+  // Somente administradores podem convidar integrantes. Cada pessoa define
+  // sua própria senha em uma página de aceite; nenhuma senha passa pelo painel.
+  if(body.acao==="convidar_usuario"){
+    if(team.papel!=="administrador")
+      return send({mensagem:"Somente administradores podem convidar usuários."},403,origin);
+    if(!validEmail(body.email)||!["administrador","operador"].includes(String(body.papel)))
+      return send({mensagem:"Informe um e-mail e uma permissão válidos."},400,origin);
+    const email=(body.email as string).trim().toLowerCase();
+    const papel=body.papel as "administrador"|"operador";
+    // Se um convite anterior venceu, uma conta Auth pode já existir. Nesse
+    // caso, um novo link individual permite terminar a ativação da senha.
+    let linkType:"invite"|"magiclink"="invite";
+    let {data:invitation,error:inviteError}=await admin.auth.admin.generateLink({type:"invite",email});
+    if(inviteError&&/already|registered|exists/i.test(inviteError.message)){
+      linkType="magiclink";
+      const retry=await admin.auth.admin.generateLink({type:"magiclink",email});
+      invitation=retry.data;
+      inviteError=retry.error;
+    }
+    if(inviteError){
+      console.error("Falha ao gerar convite",inviteError.message);
+      return send({mensagem:"Não foi possível criar o convite. Tente novamente."},502,origin);
+    }
+    const userId=invitation.user?.id;
+    const tokenHash=invitation.properties?.hashed_token;
+    if(!userId||!tokenHash)return send({mensagem:"Não foi possível preparar o acesso."},502,origin);
+    const {error:membershipError}=await admin.from("equipe_ong").upsert({
+      usuario_id:userId,papel,ativo:true
+    },{onConflict:"usuario_id"});
+    if(membershipError){
+      console.error("Falha ao vincular convite à equipe",membershipError.code);
+      return send({mensagem:"A conta foi criada, mas não foi possível autorizar o acesso. Contate o administrador."},500,origin);
+    }
+    // O fragmento não é enviado ao servidor HTTP do GitHub Pages.
+    const convite_link=`${INVITE_URL}#token_hash=${encodeURIComponent(tokenHash)}&type=${linkType}`;
+    let enviado=false;
+    if(RESEND_API_KEY){
+      try{
+        const response=await fetch("https://api.resend.com/emails",{
+          method:"POST",
+          headers:{"Authorization":"Bearer "+RESEND_API_KEY,"Content-Type":"application/json"},
+          body:JSON.stringify({
+            from:RESEND_FROM_EMAIL,to:[email],
+            subject:"Convite para o painel da Campanha de Natal — AME",
+            text:[
+              "Olá!",
+              "",
+              "Você foi convidado(a) para acessar o painel da Campanha de Natal da AME.",
+              "Use o link abaixo para escolher sua senha e ativar seu acesso:",
+              convite_link,
+              "",
+              "Este convite é individual, temporário e deve ser usado apenas por você.",
+              "Se não reconhece este convite, ignore esta mensagem."
+            ].join("\n")
+          }),
+          signal:AbortSignal.timeout(10000)
+        });
+        enviado=response.ok;
+        if(!response.ok)console.error("E-mail de convite não enviado",response.status);
+      }catch(error){
+        console.error("E-mail de convite indisponível",error instanceof Error?error.name:"Erro");
+      }
+    }
+    return send({sucesso:true,convite_link,enviado,
+      mensagem:enviado
+        ?"Convite enviado. Você também pode copiar o link para compartilhar diretamente."
+        :"Convite criado. Copie o link e encaminhe à pessoa convidada."},200,origin);
+  }
 
   // Teste de envio restrito ao administrador; destinatário vem apenas do banco.
   // Uma tentativa a cada dois minutos evita e-mails repetidos por engano.
