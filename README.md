@@ -16,7 +16,7 @@ Sistema independente da campanha de apadrinhamento, hospedado pelo GitHub Pages 
 - [x] Função `campanha-publica` publicada, com leitura de perfis autorizados e validação do Turnstile no registro de interesse.
 - [x] Função `campanha-admin` publicada, com validação de JWT e lista de autorizados em `equipe_ong`.
 - [x] Vitrine e formulário em `index.html`.
-- [x] Painel `admin.html`: login, inclusão e alteração de perfis, consulta e confirmação/cancelamento de solicitações.
+- [x] Painel `admin.html`: login, inclusão e alteração de perfis, consulta e confirmação/cancelamento de solicitações, com arquivamento e restauração de perfis e interesses.
 - [x] Teste automatizado de consulta pública e negação de acesso administrativo sem autenticação.
 - [ ] Cadastrar primeiro usuário autorizado em Supabase Auth e autorizar seu acesso administrativo.
 - [ ] Configurar Cloudflare Turnstile (chave pública no frontend e segredo exclusivamente no Supabase).
@@ -78,12 +78,15 @@ Antes de ligar:
 - `database/instalacao.sql`: estrutura inicial (já executada neste projeto; não reexecutar em outros bancos).
 - `database/fotos-privadas.sql`: migração do armazenamento privado (já aplicada; validação de caminho corrigida em migração adicional).
 - `database/notificacoes-email.sql`: fila e configuração privada de notificações.
+- `database/arquivamento.sql`: campos `arquivado_em` e proteção da reserva contra perfis arquivados (já aplicado ao projeto da ONG).
 - `supabase/functions/campanha-publica/index.ts`: API pública, Turnstile e reserva atômica.
 - `supabase/functions/campanha-admin/index.ts`: API protegida para gestão.
 - `supabase/config.toml`: declara verificação de JWT feita no próprio serviço.
 - `.github/workflows/verificar-api.yml`: testes de consulta pública e bloqueio de acesso administrativo.
 
 ## Segurança e privacidade
+
+- Arquivar é reversível: o registro permanece no banco com a data de arquivamento. O painel mostra os registros atuais por padrão e disponibiliza uma visualização dos arquivados para restauração. Os arquivados não entram nos indicadores principais nem na vitrine pública. A situação de um interesse não muda ao arquivá-lo.
 
 - O GitHub é **público**. Não gravar dados pessoais, senhas, tokens ou chaves privilegiadas nele.
 - A chave de API **publicável** do Supabase no frontend não é segredo; segurança depende das regras RLS e das checagens de autorização no servidor.

@@ -66,8 +66,8 @@ Deno.serve(async(req)=>{
 
   if(req.method==="GET") {
     const [children,requests]=await Promise.all([
-      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,foto_url,ativo,publicacao_autorizada,ordem,situacao").order("ordem",{ascending:true}).order("codigo").limit(500),
-      admin.from("solicitacoes").select("id,crianca_id,nome_padrinho,telefone,email,situacao,criada_em,atualizada_em").order("criada_em",{ascending:false}).limit(1000)
+      admin.from("criancas").select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,foto_url,ativo,publicacao_autorizada,ordem,situacao,arquivado_em").order("ordem",{ascending:true}).order("codigo").limit(500),
+      admin.from("solicitacoes").select("id,crianca_id,nome_padrinho,telefone,email,situacao,criada_em,atualizada_em,arquivado_em").order("criada_em",{ascending:false}).limit(1000)
     ]);
     if(children.error||requests.error)return send({mensagem:"Não foi possível carregar a gestão."},500,origin);
     // Links temporários somente após autenticação e verificação de membro ativo.
@@ -328,6 +328,23 @@ Deno.serve(async(req)=>{
     const {data,error}=await q;
     if(error)return send({mensagem:error.code==="23505"?"O código do perfil já existe.":"Não foi possível salvar o perfil."},409,origin);
     return send({sucesso:true,id:data?.id},200,origin);
+  }
+  if(body.acao==="definir_arquivamento"){
+    const tipo=body.tipo;
+    if((tipo!=="crianca"&&tipo!=="solicitacao")
+      ||typeof body.id!=="string"||!uuid.test(body.id)
+      ||typeof body.arquivado!=="boolean")
+      return send({mensagem:"Escolha um registro e uma operação válidos."},400,origin);
+    if(tipo==="crianca"&&team.papel!=="administrador")
+      return send({mensagem:"Somente administradores podem arquivar perfis."},403,origin);
+    // Não excluir nem alterar a situação do apadrinhamento: arquivamento é reversível.
+    const tabela=tipo==="crianca"?"criancas":"solicitacoes";
+    const {data,error}=await admin.from(tabela)
+      .update({arquivado_em:body.arquivado?new Date().toISOString():null})
+      .eq("id",body.id).select("id").maybeSingle();
+    if(error)return send({mensagem:"Não foi possível alterar o arquivamento."},500,origin);
+    if(!data)return send({mensagem:"Registro não encontrado."},404,origin);
+    return send({sucesso:true},200,origin);
   }
   if(body.acao==="atualizar_solicitacao"){
     if(typeof body.id!=="string"||!uuid.test(body.id)

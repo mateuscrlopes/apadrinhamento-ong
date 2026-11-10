@@ -78,7 +78,7 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
       </div>
     </div>
     <div class="metrics" aria-label="Indicadores da campanha">
-      <div class="metric"><span>Perfis cadastrados</span><strong id="metric-total">—</strong><small>Na campanha</small></div>
+      <div class="metric"><span>Perfis atuais</span><strong id="metric-total">—</strong><small>Sem os arquivados</small></div>
       <div class="metric"><span>Disponíveis</span><strong id="metric-available">—</strong><small>Aguardando padrinho</small></div>
       <div class="metric metric-highlight"><span>Novos interesses</span><strong id="metric-pending">—</strong><small>Precisam de acompanhamento</small></div>
       <div class="metric"><span>Confirmados</span><strong id="metric-confirmed">—</strong><small>Apadrinhamentos</small></div>
@@ -89,9 +89,9 @@ dialog{width:min(94vw,600px);max-height:85vh;overflow:auto;border:0;border-radiu
       <button class="tab" id="profiles-tab" type="button" data-tab="profiles" aria-selected="false">Perfis das crianças</button>
       <button class="tab" id="team-tab" type="button" data-tab="team" aria-selected="false" hidden>Usuários da equipe</button>
     </nav>
-    <section id="profiles-panel" hidden><div class="panel-title"><div><h2>Perfis da campanha</h2><p class="muted">Cadastre, atualize e acompanhe a disponibilidade.</p></div></div><div id="profiles" class="grid"></div></section>
+    <section id="profiles-panel" hidden><div class="panel-title"><div><h2>Perfis da campanha</h2><p class="muted">Cadastre, atualize e acompanhe a disponibilidade. Os arquivados ficam guardados fora da lista principal.</p></div><label class="archive-filter-label">Visualizar<select id="profile-archive-filter"><option value="ativos">Perfis atuais</option><option value="arquivados">Perfis arquivados</option></select></label></div><div id="profiles" class="grid"></div></section>
     <section id="requests-panel"><div class="panel-title"><div><h2>Quem quer fazer parte</h2><p class="muted">Acompanhe os contatos e confirme os apadrinhamentos após conversar com os interessados.</p></div><button class="btn ghost" id="export-requests" type="button">Exportar CSV</button></div>
-      <div class="request-tools"><label class="search-label">Buscar nome, telefone ou perfil<input type="search" id="request-search" placeholder="Buscar interessado ou criança..."></label><label class="status-filter-label">Situação<select id="request-status-filter"><option value="todos">Todas as situações</option><option value="em_contato">Em contato</option><option value="confirmado">Confirmado</option><option value="cancelado">Cancelado</option></select></label></div>
+      <div class="request-tools"><label class="search-label">Buscar nome, telefone ou perfil<input type="search" id="request-search" placeholder="Buscar interessado ou criança..."></label><label class="status-filter-label">Situação<select id="request-status-filter"><option value="todos">Todas as situações</option><option value="em_contato">Em contato</option><option value="confirmado">Confirmado</option><option value="cancelado">Cancelado</option></select></label><label class="archive-filter-label">Visualizar<select id="request-archive-filter"><option value="ativos">Interesses atuais</option><option value="arquivados">Interesses arquivados</option></select></label></div>
       <div class="card table-scroll"><table class="table">
       <thead><tr><th>Perfil</th><th>Interessado</th><th>WhatsApp</th><th>E-mail</th><th>Situação</th><th>Data</th><th>Ações</th></tr></thead>
       <tbody id="requests"></tbody>
@@ -247,13 +247,17 @@ async function refresh(){
   }
 }
 function render(){
-  document.getElementById('metric-total').textContent=children.length;
-  document.getElementById('metric-available').textContent=children.filter(p=>p.situacao==='disponivel'&&p.ativo).length;
-  document.getElementById('metric-pending').textContent=requests.filter(r=>r.situacao==='em_contato').length;
-  document.getElementById('metric-confirmed').textContent=requests.filter(r=>r.situacao==='confirmado').length;
+  const currentChildren=children.filter(p=>!p.arquivado_em);
+  const currentRequests=requests.filter(r=>!r.arquivado_em);
+  document.getElementById('metric-total').textContent=currentChildren.length;
+  document.getElementById('metric-available').textContent=currentChildren.filter(p=>p.situacao==='disponivel'&&p.ativo).length;
+  document.getElementById('metric-pending').textContent=currentRequests.filter(r=>r.situacao==='em_contato').length;
+  document.getElementById('metric-confirmed').textContent=currentRequests.filter(r=>r.situacao==='confirmado').length;
   profilesEl.replaceChildren();
-  if(!children.length)profilesEl.appendChild(node('p','Nenhum perfil cadastrado. Use “Cadastrar perfil” para começar.','empty'));
-  for(const p of children){
+  const showingArchivedProfiles=document.getElementById('profile-archive-filter').value==='arquivados';
+  const visibleChildren=children.filter(p=>Boolean(p.arquivado_em)===showingArchivedProfiles);
+  if(!visibleChildren.length)profilesEl.appendChild(node('p',showingArchivedProfiles?'Nenhum perfil arquivado.':'Nenhum perfil nesta lista. Use “Cadastrar perfil” para começar.','empty'));
+  for(const p of visibleChildren){
     const article=node('article',undefined,'profile');
     if(p.foto_url){
       const img=node('img',undefined,'profile-image');
@@ -265,15 +269,19 @@ function render(){
     const content=node('div',undefined,'profile-body');
     const head=node('div',undefined,'profile-head');
     head.append(node('h3',(p.nome_exibicao||'Perfil '+p.codigo)+' · '+p.codigo));
-    const status=node('span',statusLabels[p.situacao]||p.situacao,'status '+(p.situacao==='disponivel'?'available':p.situacao==='em_contato'?'pending':''));
+    const status=node('span',p.arquivado_em?'Arquivado':statusLabels[p.situacao]||p.situacao,'status '+(p.arquivado_em?'archived':p.situacao==='disponivel'?'available':p.situacao==='em_contato'?'pending':''));
     head.appendChild(status);
     content.appendChild(head);
     content.appendChild(node('p','Idade: '+p.idade+' anos · Roupa: '+p.tamanho_roupa+' · Calçado: '+p.tamanho_calcado,'details'));
-    content.appendChild(node('p',p.publicacao_autorizada && p.ativo?'Publicado na vitrine':'Não publicado','muted'));
+    content.appendChild(node('p',p.arquivado_em?'Arquivado · fora da vitrine':p.publicacao_autorizada && p.ativo?'Publicado na vitrine':'Não publicado','muted'));
     const actions=node('div',undefined,'card-actions');
     if(role==='administrador'){
-      const edit=node('button','Editar','btn secondary tiny');
-      edit.type='button';edit.addEventListener('click',()=>openEditor(p));actions.appendChild(edit);
+      if(!p.arquivado_em){
+        const edit=node('button','Editar','btn secondary tiny');
+        edit.type='button';edit.addEventListener('click',()=>openEditor(p));actions.appendChild(edit);
+      }
+      const archive=node('button',p.arquivado_em?'Restaurar':'Arquivar',p.arquivado_em?'btn secondary tiny':'btn ghost tiny');
+      archive.type='button';archive.addEventListener('click',()=>setArchived('crianca',p,!p.arquivado_em));actions.appendChild(archive);
     }
     content.appendChild(actions);
     article.appendChild(content);
@@ -282,20 +290,23 @@ function render(){
   requestsEl.replaceChildren();
   const term=document.getElementById('request-search').value.trim().toLocaleLowerCase('pt-BR');
   const filter=document.getElementById('request-status-filter').value;
+  const showingArchivedRequests=document.getElementById('request-archive-filter').value==='arquivados';
   const mapping=new Map(children.map(c=>[c.id,c]));
   const visibleRequests=requests.filter(r=>{
     const p=mapping.get(r.crianca_id);
     const searchable=[r.nome_padrinho,r.telefone,p?.nome_exibicao,p?.codigo].join(' ').toLocaleLowerCase('pt-BR');
-    return (filter==='todos'||r.situacao===filter)&&(!term||searchable.includes(term));
+    return Boolean(r.arquivado_em)===showingArchivedRequests &&
+      (filter==='todos'||r.situacao===filter)&&(!term||searchable.includes(term));
   });
   document.getElementById('requests-empty').hidden=visibleRequests.length>0;
-  document.getElementById('requests-empty').textContent=requests.length?'Nenhum resultado para os filtros selecionados.':'Nenhuma solicitação registrada até o momento.';
+  document.getElementById('requests-empty').textContent=showingArchivedRequests?'Nenhum interesse arquivado para os filtros selecionados.':currentRequests.length?'Nenhum resultado para os filtros selecionados.':'Nenhum interesse atual registrado até o momento.';
   for(const r of visibleRequests){
     const tr=document.createElement('tr');
     const p=mapping.get(r.crianca_id);
     for(const value of [p?.nome_exibicao||p?.codigo||'Perfil indisponível',r.nome_padrinho,r.telefone,r.email||'—',requestLabels[r.situacao]||r.situacao,new Date(r.criada_em).toLocaleString('pt-BR')]){
       tr.appendChild(node('td',value));
     }
+    if(r.arquivado_em)tr.children[4].appendChild(node('span',' · Arquivado','archived-note'));
     const td=node('td');
     const phone=String(r.telefone||'').replace(/\D/g,'');
     if(phone.length>=10){
@@ -304,16 +315,19 @@ function render(){
       chat.target='_blank';chat.rel='noopener noreferrer';chat.title='Abrir conversa com o interessado';
       td.appendChild(chat);td.append(' ');
     }
-    if(r.situacao==='em_contato'){
+    if(!r.arquivado_em&&r.situacao==='em_contato'){
       const accept=node('button','Confirmar','btn tiny');
       accept.type='button';accept.addEventListener('click',()=>updateRequest(r,'confirmado'));
       td.appendChild(accept);td.append(' ');
     }
-    if(r.situacao!=='cancelado'){
+    if(!r.arquivado_em&&r.situacao!=='cancelado'){
       const release=node('button','Liberar','btn tiny warn');
       release.type='button';release.addEventListener('click',()=>updateRequest(r,'cancelado'));
       td.appendChild(release);
     }
+    const archive=node('button',r.arquivado_em?'Restaurar':'Arquivar',r.arquivado_em?'btn tiny secondary':'btn tiny ghost');
+    archive.type='button';archive.addEventListener('click',()=>setArchived('solicitacao',r,!r.arquivado_em));
+    td.append(' ');td.appendChild(archive);
     tr.appendChild(td);requestsEl.appendChild(tr);
   }
   renderTeam();
@@ -369,6 +383,8 @@ async function approveUser(request,papel){
 }
 document.getElementById('request-search').addEventListener('input',render);
 document.getElementById('request-status-filter').addEventListener('change',render);
+document.getElementById('request-archive-filter').addEventListener('change',render);
+document.getElementById('profile-archive-filter').addEventListener('change',render);
 document.getElementById('invite-form').addEventListener('submit',async(event)=>{
   event.preventDefault();
   const form=event.currentTarget;
@@ -414,7 +430,8 @@ document.getElementById('export-requests').addEventListener('click',()=>{
   };
   const byId=new Map(children.map(c=>[c.id,c]));
   const rows=[['Perfil','Nome do padrinho','Telefone','E-mail','Situação','Data']];
-  for(const r of requests){
+  const showingArchived=document.getElementById('request-archive-filter').value==='arquivados';
+  for(const r of requests.filter(r=>Boolean(r.arquivado_em)===showingArchived)){
     const p=byId.get(r.crianca_id);
     rows.push([p?.nome_exibicao||p?.codigo||'',r.nome_padrinho,r.telefone,r.email||'',requestLabels[r.situacao]||r.situacao,new Date(r.criada_em).toLocaleString('pt-BR')]);
   }
@@ -428,6 +445,23 @@ async function updateRequest(request,status){
     await apiCall('POST',{acao:'atualizar_solicitacao',id:request.id,situacao:status});
     await refresh();
     message('Situação atualizada com sucesso.');
+  }catch(error){message(error.message,true);}
+}
+async function setArchived(tipo,item,arquivado){
+  const isProfile=tipo==='crianca';
+  const title=isProfile?(item.nome_exibicao||item.codigo):item.nome_padrinho;
+  const stillOpen=isProfile
+    ?requests.some(r=>r.crianca_id===item.id&&!r.arquivado_em&&r.situacao==='em_contato')
+    :item.situacao==='em_contato';
+  const warning=arquivado&&stillOpen?' Atenção: há um interesse em contato; arquivar não cancela o apadrinhamento.':'';
+  const question=arquivado
+    ?'Arquivar '+title+'? O registro sairá da lista principal, mas continuará salvo e poderá ser restaurado.'+warning
+    :'Restaurar '+title+' para a lista principal?';
+  if(!confirm(question))return;
+  try{
+    await apiCall('POST',{acao:'definir_arquivamento',tipo,id:item.id,arquivado});
+    await refresh();
+    message(arquivado?'Registro arquivado. Você pode encontrá-lo no filtro “Arquivados”.':'Registro restaurado com sucesso.');
   }catch(error){message(error.message,true);}
 }
 function openEditor(profile=null){

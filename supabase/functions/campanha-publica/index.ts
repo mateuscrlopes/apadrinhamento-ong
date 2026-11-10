@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
   if (req.method === "GET") {
     const { data, error } = await client.from("criancas")
       .select("id,codigo,nome_exibicao,idade,tamanho_roupa,tamanho_calcado,foto_storage_path,foto_url,situacao")
-      .eq("ativo", true).eq("publicacao_autorizada", true)
+      .eq("ativo", true).eq("publicacao_autorizada", true).is("arquivado_em", null)
       .order("ordem", { ascending: true }).order("codigo", { ascending: true })
       .limit(500);
     if (error) {
