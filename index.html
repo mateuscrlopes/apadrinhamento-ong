@@ -94,7 +94,7 @@
     </div>
   </header>
 
-  <div class="ribbon" aria-label="Campanha de Natal — juntos fazemos a diferença"><div class="ribbon-track" aria-hidden="true"><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span></div></div>
+  <div class="ribbon" aria-label="Campanha de Natal — juntos fazemos a diferença"><div class="ribbon-track" aria-hidden="true"><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span></div><button class="ribbon-motion-button" id="ribbon-motion-button" type="button" hidden>Animar faixa</button></div>
 
   <section class="how-section" id="como-funciona" aria-labelledby="how-title">
     <div class="wrap">
@@ -183,16 +183,32 @@
       const track=document.querySelector('.ribbon-track');
       const original=track && track.querySelector('.ribbon-segment');
       if(!original)return;
-      track.replaceChildren(original);
+      const group=document.createElement('span');
+      group.className='ribbon-group';
+      group.appendChild(original);
+      track.replaceChildren(group);
       const width=original.getBoundingClientRect().width;
       if(!width)return;
-      const copies=Math.max(3,Math.ceil(window.innerWidth/width)+2);
-      for(let i=1;i<copies;i++)track.appendChild(original.cloneNode(true));
-      track.style.setProperty('--ribbon-distance','-'+width+'px');
-      track.style.setProperty('--ribbon-duration',Math.max(12,width/38)+'s');
+      const copies=Math.max(2,Math.ceil(window.innerWidth/width)+1);
+      for(let i=1;i<copies;i++)group.appendChild(original.cloneNode(true));
+      track.appendChild(group.cloneNode(true));
+      track.style.setProperty('--ribbon-duration',Math.max(12,group.getBoundingClientRect().width/38)+'s');
     }
     keepRibbonContinuous();
     window.addEventListener('resize',keepRibbonContinuous);
+    if(document.fonts)document.fonts.ready.then(keepRibbonContinuous);
+    const ribbonMotionButton=document.getElementById('ribbon-motion-button');
+    const ribbonTrack=document.querySelector('.ribbon-track');
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+    function syncRibbonMotion(){
+      ribbonMotionButton.hidden=!reducedMotion.matches||ribbonTrack.classList.contains('motion-opt-in');
+    }
+    ribbonMotionButton.addEventListener('click',()=>{
+      ribbonTrack.classList.add('motion-opt-in');
+      syncRibbonMotion();
+    });
+    reducedMotion.addEventListener?.('change',syncRibbonMotion);
+    syncRibbonMotion();
     function prepareCaptcha(){
       if(!config.turnstileSiteKey || !window.turnstile){
         formMessage.textContent='A validação de segurança está em preparação. Tente novamente mais tarde.';
