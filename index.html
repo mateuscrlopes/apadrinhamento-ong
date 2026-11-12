@@ -94,7 +94,7 @@
     </div>
   </header>
 
-  <div class="ribbon" aria-label="Campanha de Natal — juntos fazemos a diferença"><div class="ribbon-track" aria-hidden="true"><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span></div><button class="ribbon-motion-button" id="ribbon-motion-button" type="button" hidden>Animar faixa</button></div>
+  <div class="ribbon" aria-label="Campanha de Natal — juntos fazemos a diferença"><div class="ribbon-track" aria-hidden="true"><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span><span class="ribbon-segment">CAMPANHA DE NATAL <svg class="icon"><use href="#icon-sparkle"/></svg> JUNTOS FAZEMOS A DIFERENÇA <svg class="icon"><use href="#icon-sparkle"/></svg> COMPARTILHE AFETO <svg class="icon"><use href="#icon-sparkle"/></svg></span></div></div>
 
   <section class="how-section" id="como-funciona" aria-labelledby="how-title">
     <div class="wrap">
@@ -197,18 +197,6 @@
     keepRibbonContinuous();
     window.addEventListener('resize',keepRibbonContinuous);
     if(document.fonts)document.fonts.ready.then(keepRibbonContinuous);
-    const ribbonMotionButton=document.getElementById('ribbon-motion-button');
-    const ribbonTrack=document.querySelector('.ribbon-track');
-    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
-    function syncRibbonMotion(){
-      ribbonMotionButton.hidden=!reducedMotion.matches||ribbonTrack.classList.contains('motion-opt-in');
-    }
-    ribbonMotionButton.addEventListener('click',()=>{
-      ribbonTrack.classList.add('motion-opt-in');
-      syncRibbonMotion();
-    });
-    reducedMotion.addEventListener?.('change',syncRibbonMotion);
-    syncRibbonMotion();
     function prepareCaptcha(){
       if(!config.turnstileSiteKey || !window.turnstile){
         formMessage.textContent='A validação de segurança está em preparação. Tente novamente mais tarde.';
