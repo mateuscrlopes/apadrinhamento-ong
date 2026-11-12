@@ -120,7 +120,7 @@ dialog { border-radius: 20px; background: var(--paper); width: min(94vw,475px); 
 @media (max-width: 560px) { .wrap { padding-inline: 20px; }.nav-inner { min-height: 73px; }.brand-symbol { width: 36px; height: 36px; font-size: 25px; }.brand-wordmark { font-size: 30px; }.brand-caption { font-size: 8px; padding-left: 10px; margin-left: 2px; }.nav-links .nav-action { font-size: 0; padding: 11px 13px; }.nav-action span { font-size: 21px; padding: 0; }.hero-inner { padding-block: 54px 28px; }.hero-copy { padding: 0; }.hero h1 { font-size: clamp(3.1rem, 13.2vw, 4.4rem); margin: 23px 0; }.hero p { font-size: 13px; line-height: 1.8; }.hero-actions { align-items: stretch; }.hero-actions a { flex: 1; gap: 8px; font-size: 11px; padding: 15px 17px; }.hero-caption { margin-top: 32px; }.hero-scene { height: 240px; margin-bottom: -90px; transform: scale(.51); width: 460px; margin-left: calc(50% - 230px); }.ribbon { height: 43px; }.ribbon-track { font-size: 10px; }.ribbon-track b { font-size: 17px; }.how-section { padding-block: 72px; }.how-head h2, .heading h2, .closing h2 { font-size: clamp(2.45rem,10vw,3.2rem); }.how-head p { font-size: 13px; }.steps { gap: 9px; }.step { min-height: 215px; padding: 17px; }.step-illustration { font-size: 40px; height: 65px; }.step h3 { font-size: 18px; }.step p { font-size: 11px; }.gallery-section { padding-block: 70px; }.heading { gap: 20px; }.heading .subtitle { margin-top: 15px; }.stats { width: 100%; }.stat { flex: 1; min-width: 0; padding: 11px 5px; }.stat strong { font-size: 25px; }.stat span { font-size: 9px; }.grid { grid-template-columns: 1fr; gap: 18px; }.photo { height: 290px; }.info { padding: 22px; }.filters { gap: 8px; }.filter { padding: 9px 11px; font-size: 11px; }.count { margin: 6px 0 0; }.note { padding: 18px; }.closing { padding-block: 64px 68px; }.closing a { width: 100%; text-align: center; }.footer-inner { align-items: start; flex-direction: column; }.footer-inner p { text-align: left; }.modal-body { padding: 25px 22px; } }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
-  .ribbon-track.motion-opt-in { animation: move-ribbon var(--ribbon-duration, 26s) linear infinite !important; }
+  .ribbon-track { animation: move-ribbon var(--ribbon-duration, 26s) linear infinite !important; }
 }
 
 /* Marca AME, iconografia vetorial e faixa contínua. */
@@ -144,7 +144,7 @@ dialog { border-radius: 20px; background: var(--paper); width: min(94vw,475px); 
 .ribbon-track .ribbon-group { display: flex; flex: none; width: max-content; padding-right: 0; }
 .ribbon-track .ribbon-segment { display: inline-flex; flex: none; align-items: center; gap: 24px; padding-right: 24px; }
 .ribbon-segment .icon { width: 19px; height: 19px; stroke-width: 2; }
-.ribbon-motion-button { position: absolute; z-index: 1; right: 9px; top: 50%; transform: translateY(-50%); border: 0; border-radius: 30px; padding: 6px 12px; background: var(--plum-deep); color: var(--paper); font: 700 11px 'DM Sans',Arial,sans-serif; cursor: pointer; }
+
 .step-illustration { width: 52px; height: 91px; display: block; padding-block: 13px; stroke-width: 1.5; }
 .photo::after { content: ''; bottom: -80px; right: -58px; width: 240px; height: 240px; border: 26px solid #ffffff30; border-radius: 50%; }
 .note-icon { width: 30px; height: 30px; }
