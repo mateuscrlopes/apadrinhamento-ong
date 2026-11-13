@@ -108,9 +108,44 @@
     </div>
   </section>
 
+  <section class="gift-guide" id="o-que-doar" aria-labelledby="gift-guide-title">
+    <div class="wrap">
+      <div class="gift-guide-head">
+        <div>
+          <span class="section-kicker">02 / O QUE DOAR</span>
+          <h2 id="gift-guide-title">O que faz parte <em>do apadrinhamento?</em></h2>
+        </div>
+        <p>Ao apadrinhar uma criança, você oferece uma roupa, um par de calçados e um kit de higiene pessoal. Se quiser, pode incluir também um brinquedo.</p>
+      </div>
+      <div class="gift-guide-grid">
+        <article class="gift-guide-item">
+          <div class="gift-guide-top"><span class="gift-guide-number">01</span><span class="gift-guide-status">Faz parte do kit</span></div>
+          <h3>Uma roupa</h3>
+          <p>Uma troca de roupa, como camiseta e calça ou bermuda.</p>
+        </article>
+        <article class="gift-guide-item">
+          <div class="gift-guide-top"><span class="gift-guide-number">02</span><span class="gift-guide-status">Faz parte do kit</span></div>
+          <h3>Um calçado</h3>
+          <p>Um par de calçados no número indicado no perfil da criança.</p>
+        </article>
+        <article class="gift-guide-item">
+          <div class="gift-guide-top"><span class="gift-guide-number">03</span><span class="gift-guide-status">Faz parte do kit</span></div>
+          <h3>Higiene pessoal</h3>
+          <p>Um kit com escova de dentes, creme dental, sabonete e fio dental.</p>
+        </article>
+        <article class="gift-guide-item gift-guide-optional">
+          <div class="gift-guide-top"><span class="gift-guide-number">04</span><span class="gift-guide-status">Opcional</span></div>
+          <h3>Um brinquedo</h3>
+          <p>Se desejar, inclua um brinquedo adequado à idade da criança. Não é obrigatório.</p>
+        </article>
+      </div>
+      <p class="gift-guide-footnote">Os tamanhos de camisa e calçado estão nos perfis abaixo. A equipe da ONG orientará sobre os demais detalhes ao confirmar o apadrinhamento.</p>
+    </div>
+  </section>
+
   <main class="gallery-section" id="perfis">
     <div class="wrap">
-    <span class="section-kicker">02 / FAÇA PARTE</span>
+    <span class="section-kicker">03 / FAÇA PARTE</span>
     <div class="heading">
       <div>
         <h2>Um encontro pode começar <em>por aqui.</em></h2>
@@ -145,6 +180,7 @@
       </div>
       <p id="chosen-profile"></p>
       <p class="modal-instruction">Deixe seus dados para que nossa equipe converse com você sobre os próximos passos. É rapidinho!</p>
+      <p class="modal-gift-note"><strong>O que doar:</strong> roupa, calçado e kit de higiene pessoal (escova de dentes, creme dental, sabonete e fio dental). <strong>Brinquedo opcional.</strong></p>
       <label class="field">Nome completo
         <input id="field-name" name="nome" type="text" maxlength="120" autocomplete="name" required>
       </label>
@@ -254,7 +290,7 @@
       const roupa=makeElement('div','','Camisa');
       const shirtSize=String(profile.tamanho_roupa||'').trim();
       roupa.appendChild(makeElement('strong','',/^a confirmar$/i.test(shirtSize)?'A confirmar':'Tamanho '+shirtSize));
-      const calcado=makeElement('div','','Sapato');
+      const calcado=makeElement('div','','Calçado');
       const shoeSize=String(profile.tamanho_calcado||'').trim();
       calcado.appendChild(makeElement('strong','',/^a confirmar$/i.test(shoeSize)?'A confirmar':'Nº '+shoeSize));
       details.append(roupa,calcado);
