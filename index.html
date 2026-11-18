@@ -393,6 +393,7 @@
         form.reset();
         formMessage.classList.add('success-message');
         formMessage.textContent='Recebemos seu interesse! A equipe da ONG entrará em contato pelo telefone informado.';
+        try{ if(window.parent!==window) window.parent.postMessage({tipo:'ame_interesse_apadrinhamento'},'https://www.maiseducacao.org'); }catch(e){} // avisa o Wix para registrar a conversão do Google Ads
         selectedProfile=null;
         await loadProfiles();
       }catch(error){
